@@ -5,7 +5,7 @@ from tkinter import ttk, filedialog, messagebox, colorchooser
 
 TEMPLATES_DIR = "templates"
 
-//TODO this works for solid but not glowing metallic, multiple RGB values not working
+##TODO this works for solid but not glowing metallic, multiple RGB values not working
 
 # -------------------------
 # Utility functions
@@ -105,7 +105,7 @@ def closest_color(rgb):
 class FormFactoryApp(tk.Tk):
     def __init__(self):
         super().__init__()
-        self.title("Dynamic Template Form Generator")
+        self.title("Unpixelled's ColourForge")
         self.geometry("900x700")
 
         self.fields = []
