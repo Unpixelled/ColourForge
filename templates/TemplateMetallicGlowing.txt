@@ -18,6 +18,7 @@ number Glow strength
 number Glow blend
 text Glow Type
 number Glow mix
+text Glow Type Duplicate
 
 
 end of form
@@ -30,14 +31,14 @@ code
 <<< Colour Settings >>>
 <material displacement_method="bump" heterogeneous_volume="False" name="METAL-!ColourNameSetting!" use_local_tuning="False" use_mis="True" use_transparent_shadow="True" volume_interpolation_method="linear" volume_sampling_method="multiple_importance">
 	<shader>
-		<color name="RGB" value="!ColourRValue! !ColourGValue! !ColourBValue!" />
+		<color name="RGB" value="!ColourRValue1! !ColourGValue1! !ColourBValue1!" />
 		<group group_name="METAL-GROUP" name="METAL-GROUP">
 			<input name="BaseColor" type="color" />
 			<input name="Color" type="color" />
 			<output name="Shader" type="closure" />
 		</group>
 		<emission name="EmissionColor">
-			<input name="Color" type="color" value="!number! !number! !number!" />
+			<input name="Color" type="color" value="!ColourRValue2! !ColourGValue2! !ColourBValue2!" />
 			<input name="Strength" type="float" value="!number!" />
 		</emission>
 		<layer_weight name="LayerWeight">

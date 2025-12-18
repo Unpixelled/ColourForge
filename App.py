@@ -5,7 +5,9 @@ from tkinter import ttk, filedialog, messagebox, colorchooser
 
 TEMPLATES_DIR = "templates"
 
-##TODO this works for solid but not glowing metallic, multiple RGB values not working
+##TODO Known errors
+## - Multiple pickers do not work because RGB values are fixed variables, subsequent ones use the first values
+## - Numbers do not get applied in sequence
 
 # -------------------------
 # Utility functions
@@ -24,7 +26,7 @@ def rgb_to_hex(r, g, b):
 
 
 # -------------------------
-# Color math (ported 1:1)
+# Color math
 # -------------------------
 
 def rgb_to_lab(rgb):
@@ -227,40 +229,107 @@ class FormFactoryApp(tk.Tk):
 
     def generate_output(self):
         out = self.code_block
-        rgb = {}
 
+
+        # Collect all values by type in order, but keep pickers and numbers separate
+        text_values = []
+        number_values = []
+        checkbox_values = []
+        pickers = []  # Each picker is a dict with r, g, b
+        colourname = None
+        colourid = None
+        rgb_fields = {}
+
+        # Ensure pickers are appended in the order they appear in the form
         for key, ftype, var in self.fields:
             val = var.get()
-
             if key == "colourname":
-                out = out.replace("!ColourName!", val)
-                out = out.replace("!ColourNameSetting!", format_for_colour_name_setting(val))
-
+                colourname = val
             elif key == "colourid":
-                out = out.replace("!ColourID!", val)
-
-            elif key.endswith("rvalue"):
-                rgb["r"] = int(val)
-                out = out.replace("!ColourRValue!", str(int(val) / 255))
-
-            elif key.endswith("gvalue"):
-                rgb["g"] = int(val)
-                out = out.replace("!ColourGValue!", str(int(val) / 255))
-
-            elif key.endswith("bvalue"):
-                rgb["b"] = int(val)
-                out = out.replace("!ColourBValue!", str(int(val) / 255))
-
+                colourid = val
             elif ftype == "text":
-                out = out.replace("!text!", val)
+                text_values.append(val)
             elif ftype == "number":
-                out = out.replace("!number!", val)
+                # Exclude number fields that are part of RGB (rvalue, gvalue, bvalue)
+                if not (key.endswith("rvalue") or key.endswith("gvalue") or key.endswith("bvalue")):
+                    number_values.append(val)
             elif ftype == "checkbox":
-                out = out.replace("!checkbox!", "0.62" if var.get() else "1.0")
+                checkbox_values.append("0.62" if var.get() else "1.0")
+            elif ftype == "picker":
+                hex_val = val
+                if hex_val.startswith("#") and len(hex_val) == 7:
+                    r = int(hex_val[1:3], 16)
+                    g = int(hex_val[3:5], 16)
+                    b = int(hex_val[5:7], 16)
+                    pickers.append({"r": r, "g": g, "b": b, "_order": len(pickers)})
+            # For legacy rvalue/gvalue/bvalue fields
+            if key.endswith("rvalue"):
+                rgb_fields.setdefault(key[:-6], {})["r"] = int(val)
+            elif key.endswith("gvalue"):
+                rgb_fields.setdefault(key[:-6], {})["g"] = int(val)
+            elif key.endswith("bvalue"):
+                rgb_fields.setdefault(key[:-6], {})["b"] = int(val)
 
-        if len(rgb) == 3:
-            out = out.replace("!Hex!", rgb_to_hex(**rgb))
-            out = out.replace("!ColourCategory!", str(closest_color(rgb)))
+        # Sort pickers by their order of appearance (just in case)
+        pickers.sort(key=lambda x: x.get("_order", 0))
+        for p in pickers:
+            if "_order" in p:
+                del p["_order"]
+
+
+        # Replace all !number!, !text!, !checkbox! sequentially (do NOT use picker values for numbers)
+        def replace_sequentially(template, placeholder, values):
+            idx = 0
+            while placeholder in template and idx < len(values):
+                template = template.replace(placeholder, str(values[idx]), 1)
+                idx += 1
+            return template
+
+        out = replace_sequentially(out, "!number!", number_values)
+        out = replace_sequentially(out, "!text!", text_values)
+        out = replace_sequentially(out, "!checkbox!", checkbox_values)
+
+
+        # Only the first picker fills !Hex! and !ColourCategory!; all pickers fill their RGB value placeholders
+        if pickers:
+            for i, rgb in enumerate(pickers):
+                if i == 0:
+                    out = out.replace("!ColourRValue!", str(rgb["r"] / 255), 1)
+                    out = out.replace("!ColourGValue!", str(rgb["g"] / 255), 1)
+                    out = out.replace("!ColourBValue!", str(rgb["b"] / 255), 1)
+                    out = out.replace("!Hex!", rgb_to_hex(**rgb), 1)
+                    out = out.replace("!ColourCategory!", str(closest_color(rgb)), 1)
+                idx = i + 1
+                out = out.replace(f"!ColourRValue{idx}!", str(rgb["r"] / 255), 1)
+                out = out.replace(f"!ColourGValue{idx}!", str(rgb["g"] / 255), 1)
+                out = out.replace(f"!ColourBValue{idx}!", str(rgb["b"] / 255), 1)
+            # Remove any indexed !HexN! and !ColourCategoryN! placeholders if present
+            import re
+            out = re.sub(r"!Hex\d+!", "", out)
+            out = re.sub(r"!ColourCategory\d+!", "", out)
+        elif rgb_fields:
+            # Fallback: legacy behaviour for rvalue/gvalue/bvalue fields
+            for idx, (prefix, rgb) in enumerate(rgb_fields.items()):
+                if all(k in rgb for k in ("r", "g", "b")):
+                    if idx == 0:
+                        out = out.replace("!ColourRValue!", str(rgb["r"] / 255), 1)
+                        out = out.replace("!ColourGValue!", str(rgb["g"] / 255), 1)
+                        out = out.replace("!ColourBValue!", str(rgb["b"] / 255), 1)
+                        out = out.replace("!Hex!", rgb_to_hex(**rgb), 1)
+                        out = out.replace("!ColourCategory!", str(closest_color(rgb)), 1)
+                    idx1 = idx + 1
+                    out = out.replace(f"!ColourRValue{idx1}!", str(rgb["r"] / 255), 1)
+                    out = out.replace(f"!ColourGValue{idx1}!", str(rgb["g"] / 255), 1)
+                    out = out.replace(f"!ColourBValue{idx1}!", str(rgb["b"] / 255), 1)
+                    out = out.replace(f"!Hex{idx1}!", rgb_to_hex(**rgb), 1)
+                    out = out.replace(f"!ColourCategory{idx1}!", str(closest_color(rgb)), 1)
+
+        # Replace colourname and colourid
+        if colourname is not None:
+            out = out.replace("!ColourName!", colourname)
+            out = out.replace("!ColourNameSetting!", format_for_colour_name_setting(colourname))
+        if colourid is not None:
+            out = out.replace("!ColourID!", colourid)
 
         return out
 
