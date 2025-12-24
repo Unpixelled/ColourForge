@@ -1,34 +1,111 @@
+### Created By Unpixelled ###
+
 import os
+import sys
+import time
 import math
 import tkinter as tk
 from tkinter import ttk, filedialog, messagebox, colorchooser
 
+# Directory where template files are stored
 TEMPLATES_DIR = "templates"
 
-##TODO Known errors
-## - Multiple pickers do not work because RGB values are fixed variables, subsequent ones use the first values
-## - Numbers do not get applied in sequence
+# Unpixelled's ColourForge
+# --------------------------
+# This application dynamically generates a XML colour code for Bricklink's Stud.io
+# based on a template file, by users entering input, and produces output code by replacing 
+# placeholders in the template with the provided values. Supports numbers, text, checkboxes,
+# and multiple RGB colour pickers.
+# Through this method, the app is expandable to as many templates as desired, without needing
+# to modify the application code itself.
+# --------------------------
 
-# -------------------------
-# Utility functions
-# -------------------------
+#Initial Logo Splash Screen
+def splashLogoAtStart(image_path: str, fade_duration: float):
+    """
+    Displays a splash image and fades it out over fade_duration seconds.
+    This is a blocking call and does NOT start mainloop().
+    Intended to be called immediately before creating the main app.
+    """
+
+    root = tk.Tk()
+    root.withdraw()
+
+    splash = tk.Toplevel(root)
+    splash.overrideredirect(True)
+    splash.attributes("-topmost", True)
+
+    # Load image
+    try:
+        img = tk.PhotoImage(file=image_path)
+    except Exception as e:
+        splash.destroy()
+        root.destroy()
+        print(f"Splash image not found: {e}")
+        sys.exit(1)
+
+    label = tk.Label(splash, image=img, borderwidth=0)
+    label.image = img  # prevent GC
+    label.pack()
+
+    # Center splash
+    splash.update_idletasks()
+    w = splash.winfo_width()
+    h = splash.winfo_height()
+    x = (splash.winfo_screenwidth() - w) // 2
+    y = (splash.winfo_screenheight() - h) // 2
+    splash.geometry(f"{w}x{h}+{x}+{y}")
+
+    splash.attributes("-alpha", 1.0)
+    splash.update()
+
+    # Fade logic
+    steps = 30
+    delay = fade_duration / steps
+    alpha = 1.0
+    delta = alpha / steps
+
+    for _ in range(steps):
+        alpha -= delta
+        splash.attributes("-alpha", max(alpha, 0))
+        splash.update()
+        time.sleep(delay)
+
+    splash.destroy()
+    root.destroy()
+
+
+############################################################
+# Configuration
+############################################################
+
+##TODO: Add configuration if needed
+
+############################################################
+# Utility functions for label/colour formatting
+############################################################
+    # Normalises a label by making it lowercase and removing non-alphanumeric characters
+    # Formats a colour name for use as a setting (uppercase, underscores)
+    # Converts RGB values to a hex string
 
 def normalize_label(label: str) -> str:
     return "".join(c for c in label.lower().strip() if c.isalnum())
 
-
 def format_for_colour_name_setting(value: str) -> str:
     return value.upper().replace(" ", "_")
-
 
 def rgb_to_hex(r, g, b):
     return f"#{r:02x}{g:02x}{b:02x}"
 
+############################################################
+# Colour math and colour matching
+############################################################
+    # Converts an RGB dictionary to CIE LAB colour space for colour comparison
+    # Calculates the Euclidean distance between two LAB colours
+    # List of known colours for closest colour matching
+    # Finds the closest colour in COLOR_LIST to the given RGB value
 
-# -------------------------
-# Color math
-# -------------------------
-
+# Converts an RGB dictionary to CIE LAB colour space for colour comparison
 def rgb_to_lab(rgb):
     r, g, b = rgb["r"] / 255, rgb["g"] / 255, rgb["b"] / 255
 
@@ -50,7 +127,7 @@ def rgb_to_lab(rgb):
         "b": 200 * (f(y) - f(z)),
     }
 
-
+# Calculates the Euclidean distance between two LAB colours
 def delta_e(l1, l2):
     return math.sqrt(
         (l2["L"] - l1["L"]) ** 2 +
@@ -58,7 +135,7 @@ def delta_e(l1, l2):
         (l2["b"] - l1["b"]) ** 2
     )
 
-
+# List of known colours for closest colour matching
 COLOR_LIST = [
     {"id": -1, "name": "black", "rgb": {"r": 0, "g": 0, "b": 0}},
     {"id": -1, "name": "gray", "rgb": {"r": 51, "g": 51, "b": 51}},
@@ -89,7 +166,7 @@ COLOR_LIST = [
     {"id": 21, "name": "magenta", "rgb": {"r": 105, "g": 3, "b": 47}},
 ]
 
-
+# Finds the closest colour in COLOR_LIST to the given RGB value
 def closest_color(rgb):
     input_lab = rgb_to_lab(rgb)
     best, dist = None, float("inf")
@@ -100,9 +177,26 @@ def closest_color(rgb):
     return best
 
 
-# -------------------------
-# Main App
-# -------------------------
+############################################################
+# Main Application Class
+############################################################
+    # Main application class for the ColourForge form generator
+    # List of tuples: (key, field type, tk variable)
+    # Populated in create_field()
+    # Holds the code block (template) loaded from the selected template file
+    # Build the GUI widgets and load available templates
+    # Create the top bar with template selection
+    # Frame where form fields will be dynamically created
+    # Loads available template files from the templates directory
+    # Clears all form fields and resets the code block
+    # Loads the selected template and parses it to build the form
+    # Parses the template file, creating form fields and extracting the code block
+    # Dynamically creates a form field of the given type and label
+    # Key is a normalised version of the label, used for variable lookup
+    # Create the appropriate Tkinter variable and widget for each field type
+    # Store the field for later use in output generation
+    # Opens a colour picker dialog and sets the selected colour
+    # If there are associated rvalue/gvalue/bvalue fields, set them as well
 
 class FormFactoryApp(tk.Tk):
     def __init__(self):
@@ -132,9 +226,14 @@ class FormFactoryApp(tk.Tk):
         btns = ttk.Frame(self)
         btns.pack(fill="x", pady=10)
 
+        # Left-aligned buttons
         ttk.Button(btns, text="Copy to Clipboard", command=self.copy_code).pack(side="left", padx=5)
         ttk.Button(btns, text="Save to File", command=self.save_code).pack(side="left", padx=5)
         ttk.Button(btns, text="Clear", command=self.clear_form).pack(side="left", padx=5)
+
+        # Right-aligned buttons
+        ttk.Button(btns, text="Settings", command=self.open_settings).pack(side="right", padx=5)
+        ttk.Button(btns, text="Backup", command=self.backup).pack(side="right", padx=5)
 
     def load_templates(self):
         if not os.path.isdir(TEMPLATES_DIR):
@@ -227,9 +326,41 @@ class FormFactoryApp(tk.Tk):
                 if k == f"{key.replace('colourpicker','colour')}{suffix}":
                     v.set(str(value))
 
+    ############################################################
+    # Output Generation Logic
+    ############################################################
     def generate_output(self):
+        """
+        Generates the output code by replacing placeholders in the template with user-provided values.
+        - Fields are collected in order of appearance.
+        - Only the first RGB picker fills !Hex! and !ColourCategory!.
+        - Each picker fills its own indexed RGB placeholders.
+        - Number, text, and checkbox fields are filled sequentially.
+        """
+            # Lists to hold values for each field type, in order of appearance
+            # text_values: All text field values
+            # number_values: All number field values (excluding RGB r/g/b fields)
+            # checkbox_values: All checkbox field values (as strings)
+            # pickers: Each picker is a dict with r, g, b
+            # colourname: Value for !ColourName! placeholder
+            # colourid: Value for !ColourID! placeholder
+            # rgb_fields: For legacy rvalue/gvalue/bvalue fields
+            # Collect all field values in order, and build picker/rgb lists
+                        # Exclude number fields that are part of RGB (rvalue, gvalue, bvalue)
+                        # Checkbox is 0.62 if checked, 1.0 if not
+                        # Parse hex string to r/g/b and store in pickers list
+                    # For legacy rvalue/gvalue/bvalue fields, group by prefix
+            # Sort pickers by their order of appearance (defensive, should already be correct)
+            # Helper to replace placeholders sequentially with values from a list
+            # Replace !number!, !text!, !checkbox! in order of appearance
+            # Replace RGB picker values in order
+            # Only the first picker fills !Hex! and !ColourCategory!
+                    # Remove any indexed !HexN! and !ColourCategoryN! placeholders if present
+            # Fallback: legacy behaviour for rvalue/gvalue/bvalue fields
+            # Replace colourname and colourid placeholders
+            # Copies the generated code to the clipboard
+            # Saves the generated code to a file
         out = self.code_block
-
 
         # Collect all values by type in order, but keep pickers and numbers separate
         text_values = []
@@ -276,7 +407,6 @@ class FormFactoryApp(tk.Tk):
             if "_order" in p:
                 del p["_order"]
 
-
         # Replace all !number!, !text!, !checkbox! sequentially (do NOT use picker values for numbers)
         def replace_sequentially(template, placeholder, values):
             idx = 0
@@ -288,7 +418,6 @@ class FormFactoryApp(tk.Tk):
         out = replace_sequentially(out, "!number!", number_values)
         out = replace_sequentially(out, "!text!", text_values)
         out = replace_sequentially(out, "!checkbox!", checkbox_values)
-
 
         # Only the first picker fills !Hex! and !ColourCategory!; all pickers fill their RGB value placeholders
         if pickers:
@@ -345,6 +474,16 @@ class FormFactoryApp(tk.Tk):
         with open(path, "w", encoding="utf-8") as f:
             f.write(self.generate_output())
 
+    def backup(self):
+        messagebox.showinfo("Backup", "Backup functionality not yet implemented.")
+
+    def open_settings(self):
+        messagebox.showinfo("Settings", "Settings window not yet implemented.")
+
 
 if __name__ == "__main__":
+    #Show the splash screen logo
+    splashLogoAtStart("splash.png", 2.0)
+
+    #Begin main application
     FormFactoryApp().mainloop()
