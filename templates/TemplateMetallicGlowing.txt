@@ -20,7 +20,6 @@ text Glow Type
 number Glow mix
 text Glow Type Duplicate
 
-
 end of form
 
 code

@@ -1,0 +1,36 @@
+section Colour Description
+text Colour Name
+number Colour ID
+checkbox Transparent Colour
+
+section Colour
+picker ColourPicker
+number Colour R value
+number Colour G value
+number Colour B value
+number Subsurface
+number Clearcoat
+number Metallic
+
+end of form
+
+code
+
+<<< Colour Definition >>>
+!ColourID!	!ColourID!	!ColourID!	!ColourID!	!ColourName!	!ColourName!	!ColourName!	!ColourName!	!Hex!	!checkbox!	Pearl Colors	!ColourCategory!	to_lego			Pearl Colors
+
+<<< Colour Settings >>>
+<material diffuse_ao_factor="1.0" displacement_method="bump" glossy_ao_factor="0.0" heterogeneous_volume="False" name="PEARL-!ColourNameSetting!" subsurface_ao_factor="0.0" subsurface_factor="1.100000023841858" transmission_ao_factor="0.0" use_local_tuning="True" use_mis="True" use_transparent_shadow="True" volume_interpolation_method="linear" volume_sampling_method="multiple_importance">
+	<shader>
+		<color name="RGB" value="!ColourRValue! !ColourGValue! !ColourBValue!" />
+		<group group_name="PEARL-GROUP" name="PEARL-GROUP">
+			<input name="Color" type="color" />
+			<input name="Subsurface" type="float" value="!number!" />
+			<input name="Clearcoat" type="float" value="!number!" />
+			<input name="Metallic" type="float" value="!number!" />
+			<output name="BSDF" type="closure" />
+		</group>
+		<connect from_node="RGB" from_socket="Color" to_node="PEARL-GROUP" to_socket="Color" />
+		<connect from_node="PEARL-GROUP" from_socket="BSDF" to_node="Output" to_socket="Surface" />
+	</shader>
+</material>

@@ -9,6 +9,17 @@ number Colour R value
 number Colour G value
 number Colour B value
 
+section Glow
+picker Glow ColourPicker
+number Glow Colour R value
+number Glow Colour G value
+number Glow Colour B value
+number Glow strength
+number Glow blend
+text Glow Type
+number Glow mix
+text Glow Type Duplicate
+
 end of form
 
 code
