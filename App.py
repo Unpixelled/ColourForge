@@ -11,6 +11,12 @@ from tkinter import ttk, filedialog, messagebox, colorchooser
 # Directory where template files are stored
 TEMPLATES_DIR = "templates"
 
+#Current base directory
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+#Path to settings.cfg
+SETTINGS_CFG = os.path.join(BASE_DIR, "settings.cfg")
+
 # Unpixelled's ColourForge
 # --------------------------
 # This application dynamically generates a XML colour code for Bricklink's Stud.io
@@ -474,16 +480,13 @@ class FormFactoryApp(tk.Tk):
     # Backup function copy the existing custom color definition and settings files
     def backup(self):
         try:
-            baseDir = os.path.dirname(os.path.abspath(__file__))
-            settingsPath = os.path.join(baseDir, "settings.cfg")
-
-            if not os.path.isfile(settingsPath):
+            if not os.path.isfile(SETTINGS_CFG):
                 messagebox.showerror("Backup Error", "settings.cfg not found in application directory.")
                 return
 
             # Read FileLocation from cfg
             sourceDir = None
-            with open(settingsPath, "r", encoding="utf-8") as f:
+            with open(SETTINGS_CFG, "r", encoding="utf-8") as f:
                 for line in f:
                     if line.startswith("FileLocation:"):
                         sourceDir = line.split("FileLocation:", 1)[1].strip()
@@ -493,7 +496,7 @@ class FormFactoryApp(tk.Tk):
                 messagebox.showerror("Backup Error", "Invalid or missing FileLocation in config.cfg.")
                 return
 
-            backup_dir = os.path.join(baseDir, "backup")
+            backup_dir = os.path.join(BASE_DIR, "backup")
             os.makedirs(backup_dir, exist_ok=True)
 
             timestamp = time.strftime("%y%m%d_%H%M")
@@ -529,7 +532,7 @@ class FormFactoryApp(tk.Tk):
 
     # Opens the settings file
     def open_settings(self):
-        path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "settings.cfg")
+        path = SETTINGS_CFG
 
         if not os.path.isfile(path):
             messagebox.showerror("Settings Error", "settings.cfg was not found.")
