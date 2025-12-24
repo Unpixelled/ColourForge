@@ -8,14 +8,18 @@ import shutil
 import tkinter as tk
 from tkinter import ttk, filedialog, messagebox, colorchooser
 
-# Directory where template files are stored
-TEMPLATES_DIR = "templates"
-
 #Current base directory
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
+# Directory where template files are stored (absolute path)
+TEMPLATES_DIR = os.path.join(BASE_DIR, "templates")
+
 #Path to settings.cfg
 SETTINGS_CFG = os.path.join(BASE_DIR, "settings.cfg")
+
+# Checkbox substitution values
+CHECKBOX_CHECKED_VALUE = "0.62"
+CHECKBOX_UNCHECKED_VALUE = "1.0"
 
 # Unpixelled's ColourForge
 # --------------------------
@@ -95,6 +99,16 @@ def format_for_colour_name_setting(value: str) -> str:
     return value.upper().replace(" ", "_")
 
 def rgb_to_hex(r, g, b):
+    # Be tolerant of floats/strings and clamp to valid 0-255 ints
+    try:
+        r = int(round(float(r)))
+        g = int(round(float(g)))
+        b = int(round(float(b)))
+    except Exception:
+        r, g, b = 0, 0, 0
+    r = max(0, min(255, r))
+    g = max(0, min(255, g))
+    b = max(0, min(255, b))
     return f"#{r:02x}{g:02x}{b:02x}"
 
 ############################################################
@@ -103,7 +117,7 @@ def rgb_to_hex(r, g, b):
     # Converts an RGB dictionary to CIE LAB colour space for colour comparison
     # Calculates the Euclidean distance between two LAB colours
     # List of known colours for closest colour matching
-    # Finds the closest colour in COLOR_LIST to the given RGB value
+    # Finds the closest colour in COLOUR_LIST to the given RGB value
 
 # Converts an RGB dictionary to CIE LAB colour space for colour comparison
 def rgb_to_lab(rgb):
@@ -137,7 +151,7 @@ def delta_e(l1, l2):
 
 # List of known colours for closest colour matching
 # Some are directly from Stud.io
-COLOR_LIST = [
+COLOUR_LIST = [
     {"id": -1, "name": "black", "rgb": {"r": 0, "g": 0, "b": 0}},
     {"id": -1, "name": "gray", "rgb": {"r": 51, "g": 51, "b": 51}},
     {"id": -1, "name": "gray", "rgb": {"r": 102, "g": 102, "b": 102}},
@@ -167,11 +181,11 @@ COLOR_LIST = [
     {"id": 21, "name": "magenta", "rgb": {"r": 105, "g": 3, "b": 47}},
 ]
 
-# Finds the closest colour in COLOR_LIST to the given RGB value
+# Finds the closest colour in COLOUR_LIST to the given RGB value
 def closest_color(rgb):
     input_lab = rgb_to_lab(rgb)
     best, dist = None, float("inf")
-    for c in COLOR_LIST:
+    for c in COLOUR_LIST:
         d = delta_e(input_lab, rgb_to_lab(c["rgb"]))
         if d < dist:
             best, dist = c["id"], d
@@ -276,7 +290,9 @@ class FormFactoryApp(tk.Tk):
                 continue
 
             if line.startswith("section"):
-                section = ttk.LabelFrame(self.form_frame, text=line[8:].strip())
+                parts = line.split(None, 1)
+                title = parts[1].strip() if len(parts) > 1 else ""
+                section = ttk.LabelFrame(self.form_frame, text=title)
                 section.pack(fill="x", pady=5)
                 continue
 
@@ -386,7 +402,7 @@ class FormFactoryApp(tk.Tk):
                 if not (key.endswith("rvalue") or key.endswith("gvalue") or key.endswith("bvalue")):
                     number_values.append(val)
             elif ftype == "checkbox":
-                checkbox_values.append("0.62" if var.get() else "1.0")
+                checkbox_values.append(CHECKBOX_CHECKED_VALUE if var.get() else CHECKBOX_UNCHECKED_VALUE)
             elif ftype == "picker":
                 hex_val = val
                 if hex_val.startswith("#") and len(hex_val) == 7:
