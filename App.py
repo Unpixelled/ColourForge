@@ -197,7 +197,7 @@ def closest_color(rgb):
 ############################################################
     # Main application class for the ColourForge form generator
     # List of tuples: (key, field type, tk variable)
-    # Populated in create_field()
+    # Populated in createField()
     # Holds the code block (template) loaded from the selected template file
     # Build the GUI widgets and load available templates
     # Create the top bar with template selection
@@ -222,10 +222,10 @@ class FormFactoryApp(tk.Tk):
         self.fields = []
         self.code_block = ""
 
-        self.create_widgets()
-        self.load_templates()
+        self.createWidgets()
+        self.loadTemplates()
 
-    def create_widgets(self):
+    def createWidgets(self):
         top = ttk.Frame(self)
         top.pack(fill="x", padx=10, pady=10)
 
@@ -233,7 +233,7 @@ class FormFactoryApp(tk.Tk):
         self.template_var = tk.StringVar()
         self.template_combo = ttk.Combobox(top, textvariable=self.template_var, state="readonly")
         self.template_combo.pack(side="left", padx=5)
-        self.template_combo.bind("<<ComboboxSelected>>", self.load_template)
+        self.template_combo.bind("<<ComboboxSelected>>", self.loadTemplate)
 
         self.form_frame = ttk.Frame(self)
         self.form_frame.pack(fill="both", expand=True, padx=10, pady=10)
@@ -242,33 +242,34 @@ class FormFactoryApp(tk.Tk):
         btns.pack(fill="x", pady=10)
 
         # Left-aligned buttons
-        ttk.Button(btns, text="Copy to Clipboard", command=self.copy_code).pack(side="left", padx=5)
-        ttk.Button(btns, text="Save to File", command=self.save_code).pack(side="left", padx=5)
-        ttk.Button(btns, text="Clear", command=self.clear_form).pack(side="left", padx=5)
+        ttk.Button(btns, text="Copy to Clipboard", command=self.copyCode).pack(side="left", padx=5)
+        ttk.Button(btns, text="Save to File", command=self.saveCode).pack(side="left", padx=5)
+        ttk.Button(btns, text="Export", command=self.exportCode).pack(side="left", padx=5)
+        ttk.Button(btns, text="Clear", command=self.clearForm).pack(side="left", padx=5)
 
         # Right-aligned buttons
-        ttk.Button(btns, text="Settings", command=self.open_settings).pack(side="right", padx=5)
+        ttk.Button(btns, text="Settings", command=self.openSettings).pack(side="right", padx=5)
         ttk.Button(btns, text="Backup", command=self.backup).pack(side="right", padx=5)
 
-    def load_templates(self):
+    def loadTemplates(self):
         if not os.path.isdir(TEMPLATES_DIR):
             os.makedirs(TEMPLATES_DIR)
         files = [f for f in os.listdir(TEMPLATES_DIR) if f.endswith(".txt")]
         self.template_combo["values"] = files
 
-    def clear_form(self):
+    def clearForm(self):
         for w in self.form_frame.winfo_children():
             w.destroy()
         self.fields.clear()
         self.code_block = ""
 
-    def load_template(self, *_):
-        self.clear_form()
+    def loadTemplate(self, *_):
+        self.clearForm()
         path = os.path.join(TEMPLATES_DIR, self.template_var.get())
         with open(path, "r", encoding="utf-8") as f:
-            self.parse_template(f.read())
+            self.parseTemplate(f.read())
 
-    def parse_template(self, content):
+    def parseTemplate(self, content):
         lines = content.splitlines()
         section = None
         parsing_code = False
@@ -298,11 +299,11 @@ class FormFactoryApp(tk.Tk):
 
             t, *label = line.split()
             label = " ".join(label)
-            self.create_field(section, t, label)
+            self.createField(section, t, label)
 
         self.code_block = "\n".join(code_lines)
 
-    def create_field(self, parent, ftype, label):
+    def createField(self, parent, ftype, label):
         frame = ttk.Frame(parent)
         frame.pack(fill="x", pady=2)
 
@@ -323,7 +324,7 @@ class FormFactoryApp(tk.Tk):
             widget = ttk.Button(
                 frame,
                 text="Pick",
-                command=lambda v=var, k=key: self.pick_color(v, k)
+                command=lambda v=var, k=key: self.pickColour(v, k)
             )
         else:
             return
@@ -331,7 +332,7 @@ class FormFactoryApp(tk.Tk):
         widget.pack(side="left")
         self.fields.append((key, ftype, var))
 
-    def pick_color(self, var, key):
+    def pickColour(self, var, key):
         c = colorchooser.askcolor()[0]
         if not c:
             return
@@ -346,7 +347,7 @@ class FormFactoryApp(tk.Tk):
     ############################################################
     # Output Generation Logic
     ############################################################
-    def generate_output(self):
+    def generateOutput(self):
         """
         Generates the output code by replacing placeholders in the template with user-provided values.
         - Fields are collected in order of appearance.
@@ -425,16 +426,16 @@ class FormFactoryApp(tk.Tk):
                 del p["_order"]
 
         # Replace all !number!, !text!, !checkbox! sequentially (do NOT use picker values for numbers)
-        def replace_sequentially(template, placeholder, values):
+        def replaceSequentially(template, placeholder, values):
             idx = 0
             while placeholder in template and idx < len(values):
                 template = template.replace(placeholder, str(values[idx]), 1)
                 idx += 1
             return template
 
-        out = replace_sequentially(out, "!number!", number_values)
-        out = replace_sequentially(out, "!text!", text_values)
-        out = replace_sequentially(out, "!checkbox!", checkbox_values)
+        out = replaceSequentially(out, "!number!", number_values)
+        out = replaceSequentially(out, "!text!", text_values)
+        out = replaceSequentially(out, "!checkbox!", checkbox_values)
 
         # Only the first picker fills !Hex! and !ColourCategory!; all pickers fill their RGB value placeholders
         if pickers:
@@ -480,18 +481,27 @@ class FormFactoryApp(tk.Tk):
         return out
 
     # Copies the generated code to the clipboard
-    def copy_code(self):
+    def copyCode(self):
         self.clipboard_clear()
-        self.clipboard_append(self.generate_output())
+        self.clipboard_append(self.generateOutput())
         messagebox.showinfo("Copied", "Code copied to clipboard")
 
     # Saves the generated code to a file
-    def save_code(self):
+    def saveCode(self):
         path = filedialog.asksaveasfilename(defaultextension=".txt")
         if not path:
             return
         with open(path, "w", encoding="utf-8") as f:
-            f.write(self.generate_output())
+            f.write(self.generateOutput())
+
+    # Export code to stud.io files
+    def exportCode(self):
+        messagebox.showinfo("Export", "Export functionality is not yet implemented.")
+        #Read FileLocation from settings.cfg
+        #Generate output code
+        #split output code into definition and settings parts and remove titles
+        #Add newline to definition file and write definition file
+        #Locate end tag in settings file and write to the line before that
 
     # Backup function copy the existing custom color definition and settings files
     def backup(self):
@@ -547,14 +557,13 @@ class FormFactoryApp(tk.Tk):
             messagebox.showerror("Backup Error", str(e))
 
     # Opens the settings file
-    def open_settings(self):
-        path = SETTINGS_CFG
-
-        if not os.path.isfile(path):
+    def openSettings(self):
+        if not os.path.isfile(SETTINGS_CFG):
             messagebox.showerror("Settings Error", "settings.cfg was not found.")
             return
-
-        os.startfile(path)
+        else:
+            os.startfile(SETTINGS_CFG)
+            ##TODO known error where this adds a newline to terminal
             
 ############################################################
 # Main Execution
