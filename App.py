@@ -4,6 +4,7 @@ import os
 import sys
 import time
 import math
+import shutil
 import tkinter as tk
 from tkinter import ttk, filedialog, messagebox, colorchooser
 
@@ -74,13 +75,6 @@ def splashLogoAtStart(image_path: str, fade_duration: float):
     splash.destroy()
     root.destroy()
 
-
-############################################################
-# Configuration
-############################################################
-
-##TODO: Add configuration if needed
-
 ############################################################
 # Utility functions for label/colour formatting
 ############################################################
@@ -136,6 +130,7 @@ def delta_e(l1, l2):
     )
 
 # List of known colours for closest colour matching
+# Some are directly from Stud.io
 COLOR_LIST = [
     {"id": -1, "name": "black", "rgb": {"r": 0, "g": 0, "b": 0}},
     {"id": -1, "name": "gray", "rgb": {"r": 51, "g": 51, "b": 51}},
@@ -462,11 +457,13 @@ class FormFactoryApp(tk.Tk):
 
         return out
 
+    # Copies the generated code to the clipboard
     def copy_code(self):
         self.clipboard_clear()
         self.clipboard_append(self.generate_output())
         messagebox.showinfo("Copied", "Code copied to clipboard")
 
+    # Saves the generated code to a file
     def save_code(self):
         path = filedialog.asksaveasfilename(defaultextension=".txt")
         if not path:
@@ -474,12 +471,75 @@ class FormFactoryApp(tk.Tk):
         with open(path, "w", encoding="utf-8") as f:
             f.write(self.generate_output())
 
+    # Backup function copy the existing custom color definition and settings files
     def backup(self):
-        messagebox.showinfo("Backup", "Backup functionality not yet implemented.")
+        try:
+            baseDir = os.path.dirname(os.path.abspath(__file__))
+            settingsPath = os.path.join(baseDir, "settings.cfg")
 
+            if not os.path.isfile(settingsPath):
+                messagebox.showerror("Backup Error", "settings.cfg not found in application directory.")
+                return
+
+            # Read FileLocation from cfg
+            sourceDir = None
+            with open(settingsPath, "r", encoding="utf-8") as f:
+                for line in f:
+                    if line.startswith("FileLocation:"):
+                        sourceDir = line.split("FileLocation:", 1)[1].strip()
+                        break
+
+            if not sourceDir or not os.path.isdir(sourceDir):
+                messagebox.showerror("Backup Error", "Invalid or missing FileLocation in config.cfg.")
+                return
+
+            backup_dir = os.path.join(baseDir, "backup")
+            os.makedirs(backup_dir, exist_ok=True)
+
+            timestamp = time.strftime("%y%m%d_%H%M")
+            files_to_backup = ["CustomColorDefinition.txt", "CustomColorSettings.xml"]
+
+            copied = []
+
+            for filename in files_to_backup:
+                src = os.path.join(sourceDir, filename)
+                if not os.path.isfile(src):
+                    continue
+
+                name, ext = os.path.splitext(filename)
+                dst_name = f"{name}_{timestamp}{ext}"
+                dst = os.path.join(backup_dir, dst_name)
+
+                shutil.copy2(src, dst)
+                copied.append(dst_name)
+
+            if copied:
+                messagebox.showinfo(
+                    "Backup Complete",
+                    "Backed up files:\n" + "\n".join(copied)
+                )
+            else:
+                messagebox.showwarning(
+                    "Backup",
+                    "No files were backed up (files missing?)."
+                )
+
+        except Exception as e:
+            messagebox.showerror("Backup Error", str(e))
+
+    # Opens the settings file
     def open_settings(self):
-        messagebox.showinfo("Settings", "Settings window not yet implemented.")
+        path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "settings.cfg")
 
+        if not os.path.isfile(path):
+            messagebox.showerror("Settings Error", "settings.cfg was not found.")
+            return
+
+        os.startfile(path)
+            
+############################################################
+# Main Execution
+############################################################
 
 if __name__ == "__main__":
     #Show the splash screen logo
