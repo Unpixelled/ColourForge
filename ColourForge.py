@@ -333,7 +333,8 @@ class FormFactoryApp(tk.Tk):
             return
 
         widget.pack(side="left")
-        self.fields.append((key, ftype, var))
+        # Store label too so we can show friendly error messages on validation
+        self.fields.append((key, ftype, var, label))
 
     def pickColour(self, var, key):
         c = colorchooser.askcolor()[0]
@@ -343,7 +344,7 @@ class FormFactoryApp(tk.Tk):
         var.set(rgb_to_hex(r, g, b))
 
         for suffix, value in zip(("rvalue", "gvalue", "bvalue"), (r, g, b)):
-            for k, _, v in self.fields:
+            for k, _, v, _ in self.fields:
                 if k == f"{key.replace('colourpicker','colour')}{suffix}":
                     v.set(str(value))
 
@@ -393,7 +394,7 @@ class FormFactoryApp(tk.Tk):
         rgb_fields = {}
 
         # Ensure pickers are appended in the order they appear in the form
-        for key, ftype, var in self.fields:
+        for key, ftype, var, label in self.fields:
             val = var.get()
             if key == "colourname":
                 colourname = val
@@ -404,7 +405,16 @@ class FormFactoryApp(tk.Tk):
             elif ftype == "number":
                 # Exclude number fields that are part of RGB (rvalue, gvalue, bvalue)
                 if not (key.endswith("rvalue") or key.endswith("gvalue") or key.endswith("bvalue")):
-                    number_values.append(val)
+                    # Validate numeric input
+                    if val is None or str(val).strip() == "":
+                        messagebox.showerror("Input Error", f"Number field '{label}' is empty. Please enter a numeric value.")
+                        return None
+                    try:
+                        float(val)
+                        number_values.append(val)
+                    except Exception:
+                        messagebox.showerror("Input Error", f"Invalid number in field '{label}'. Please enter a numeric value.")
+                        return None
             elif ftype == "checkbox":
                 checkbox_values.append(CHECKBOX_CHECKED_VALUE if var.get() else CHECKBOX_UNCHECKED_VALUE)
             elif ftype == "picker":
@@ -414,13 +424,25 @@ class FormFactoryApp(tk.Tk):
                     g = int(hex_val[3:5], 16)
                     b = int(hex_val[5:7], 16)
                     pickers.append({"r": r, "g": g, "b": b, "_order": len(pickers)})
-            # For legacy rvalue/gvalue/bvalue fields
+            # For legacy rvalue/gvalue/bvalue fields - validate integers
             if key.endswith("rvalue"):
-                rgb_fields.setdefault(key[:-6], {})["r"] = int(val)
+                try:
+                    rgb_fields.setdefault(key[:-6], {})["r"] = int(val)
+                except Exception:
+                    messagebox.showerror("Input Error", f"Invalid R value in field '{label}'. Please enter an integer.")
+                    return None
             elif key.endswith("gvalue"):
-                rgb_fields.setdefault(key[:-6], {})["g"] = int(val)
+                try:
+                    rgb_fields.setdefault(key[:-6], {})["g"] = int(val)
+                except Exception:
+                    messagebox.showerror("Input Error", f"Invalid G value in field '{label}'. Please enter an integer.")
+                    return None
             elif key.endswith("bvalue"):
-                rgb_fields.setdefault(key[:-6], {})["b"] = int(val)
+                try:
+                    rgb_fields.setdefault(key[:-6], {})["b"] = int(val)
+                except Exception:
+                    messagebox.showerror("Input Error", f"Invalid B value in field '{label}'. Please enter an integer.")
+                    return None
 
         # Sort pickers by their order of appearance (just in case)
         pickers.sort(key=lambda x: x.get("_order", 0))
@@ -485,8 +507,11 @@ class FormFactoryApp(tk.Tk):
 
     # Copies the generated code to the clipboard
     def copyCode(self):
+        out = self.generateOutput()
+        if out is None:
+            return
         self.clipboard_clear()
-        self.clipboard_append(self.generateOutput())
+        self.clipboard_append(out)
         messagebox.showinfo("Copied", "Code copied to clipboard")
 
     # Saves the generated code to a file
@@ -494,11 +519,18 @@ class FormFactoryApp(tk.Tk):
         path = filedialog.asksaveasfilename(defaultextension=".txt")
         if not path:
             return
+        out = self.generateOutput()
+        if out is None:
+            return
         with open(path, "w", encoding="utf-8") as f:
-            f.write(self.generateOutput())
+            f.write(out)
 
     # Export code to stud.io files
     def exportCode(self):
+        # Validate inputs first — abort if validation fails
+        out = self.generateOutput()
+        if out is None:
+            return
         messagebox.showinfo("Export", "Export functionality is not yet implemented.")
         #Read FileLocation from settings.cfg
         #Generate output code
