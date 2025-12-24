@@ -8,14 +8,17 @@ import shutil
 import tkinter as tk
 from tkinter import ttk, filedialog, messagebox, colorchooser
 
-#Current base directory
+# Current base directory
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # Directory where template files are stored (absolute path)
 TEMPLATES_DIR = os.path.join(BASE_DIR, "templates")
 
-#Path to settings.cfg
+# Path to settings.cfg
 SETTINGS_CFG = os.path.join(BASE_DIR, "settings.cfg")
+
+# Fade Duration for splash screen
+FADE_DURATION = 2.0
 
 # Checkbox substitution values
 CHECKBOX_CHECKED_VALUE = "0.62"
@@ -31,7 +34,7 @@ CHECKBOX_UNCHECKED_VALUE = "1.0"
 # to modify the application code itself.
 # --------------------------
 
-#Initial Logo Splash Screen
+# Initial Logo Splash Screen
 def splashLogoAtStart(image_path: str, fade_duration: float):
     """
     Displays a splash image and fades it out over fade_duration seconds.
@@ -571,7 +574,7 @@ class FormFactoryApp(tk.Tk):
 
 if __name__ == "__main__":
     #Show the splash screen logo
-    splashLogoAtStart("splash.png", 2.0)
+    splashLogoAtStart("splash.png", FADE_DURATION)
 
     #Begin main application
     FormFactoryApp().mainloop()
