@@ -20,6 +20,7 @@ SETTINGS_CFG = os.path.join(BASE_DIR, "settings.cfg")
 # File names for Stud.io export
 DEFINITION_FILE = "CustomColorDefinition.txt"
 SETTINGS_FILE = "CustomColorSettings.xml"
+SETTINGS_ENDING = "</eyesight>"
 
 # Fade Duration for splash screen
 FADE_DURATION = 2.0
@@ -283,6 +284,7 @@ class FormFactoryApp(tk.Tk):
         code_lines = []
 
         for line in lines:
+            raw = line
             line = line.strip()
             if not line or line.startswith("//"):
                 continue
@@ -294,7 +296,8 @@ class FormFactoryApp(tk.Tk):
             if parsing_code:
                 if line.startswith("code"):
                     continue
-                code_lines.append(line)
+                # Preserve original leading whitespace for code lines
+                code_lines.append(raw)
                 continue
 
             if line.startswith("section"):
@@ -550,21 +553,12 @@ class FormFactoryApp(tk.Tk):
 
         # Extract definition and settings sections
         definition = out[defIdentifier + len(defMarkerText):setIdentifier].strip()
-        settings = out[setIdentifier + len(setMarkerText):].strip()
+        # Keep raw settings (do NOT strip) so leading whitespace/indentation is preserved
+        settings = out[setIdentifier + len(setMarkerText):]
 
-        # Show message boxes containing each section for user review 
-        ##TODO Replace with export write methods
-        # try:
-        #     messagebox.showinfo("Definition", definition if definition else "(empty)")
-        # except Exception:
-        #     pass
-
+        # Write to files
         self.writeDefinition(definition)
-
-        try:
-            messagebox.showinfo("Settings", settings if settings else "(empty)")
-        except Exception:
-            pass
+        self.writeSettings(settings)
 
         return definition, settings
 
@@ -596,7 +590,61 @@ class FormFactoryApp(tk.Tk):
         return
 
     def writeSettings(self, settings):
-        pass
+        # Read FileLocation from cfg, confirm files from settings.cfg exist
+        sourceDir = None
+        with open(SETTINGS_CFG, "r", encoding="utf-8") as f:
+            for line in f:
+                if line.startswith("FileLocation:"):
+                    sourceDir = line.split("FileLocation:", 1)[1].strip()
+                    break
+
+        if not sourceDir or not os.path.isdir(sourceDir):
+            messagebox.showerror("Write Error", "Invalid or missing FileLocation in config.cfg.")
+            return
+        
+        # Write settings into the settings file, inserting them before SETTINGS_ENDING
+        set_path = os.path.join(sourceDir, SETTINGS_FILE)
+        try:
+            # If the settings file doesn't exist, do not create it — report an error
+            if not os.path.isfile(set_path):
+                messagebox.showerror("Write Error", f"{SETTINGS_FILE} not found at target location.")
+                return
+
+            # Read the existing settings file into memory. ##TODO large files, can we read only the end
+            with open(set_path, "r", encoding="utf-8") as f:
+                content = f.read()
+
+            # Find the ending marker and insert settings immediately *before* it
+            # This preserves any existing whitespace/indentation that surrounds the tag
+            idx = content.find(SETTINGS_ENDING)
+            if idx != -1:
+                # Keep the exact 'before' and 'after' slices so we do not alter leading/trailing whitespace or indentation.
+                before = content[:idx]
+                after = content[idx:]
+
+                # Ensure the insertion is separated from existing content by a newline
+                # if the file did not already end with one immediately before the tag
+                if not before.endswith("\n"):
+                    before += "\n"
+
+                # Add a newline after settings if it doesn't already end with one
+                settings_to_write = settings
+                if not settings_to_write.endswith("\n"):
+                    settings_to_write += "\n"
+
+                new_content = before + settings_to_write + after
+            else:
+                # If the ending marker is not present, consider the settings file invalid and abort
+                messagebox.showerror("Write Error", f"{SETTINGS_FILE} is missing expected ending marker {SETTINGS_ENDING}; file appears invalid.")
+                return
+
+            with open(set_path, "w", encoding="utf-8") as f:
+                f.write(new_content)
+            messagebox.showinfo("Write Complete", f"Settings written to {SETTINGS_FILE}")
+        except Exception as e:
+            messagebox.showerror("Write Error", str(e))
+        
+        return
 
     # Backup function copy the existing custom color definition and settings files
     def backup(self):
