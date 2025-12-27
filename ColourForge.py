@@ -553,11 +553,13 @@ class FormFactoryApp(tk.Tk):
         settings = out[setIdentifier + len(setMarkerText):].strip()
 
         # Show message boxes containing each section for user review 
-        ##TODO Replace with export
-        try:
-            messagebox.showinfo("Definition", definition if definition else "(empty)")
-        except Exception:
-            pass
+        ##TODO Replace with export write methods
+        # try:
+        #     messagebox.showinfo("Definition", definition if definition else "(empty)")
+        # except Exception:
+        #     pass
+
+        self.writeDefinition(definition)
 
         try:
             messagebox.showinfo("Settings", settings if settings else "(empty)")
@@ -565,6 +567,36 @@ class FormFactoryApp(tk.Tk):
             pass
 
         return definition, settings
+
+    # Writes the definition to the appropriate file
+    def writeDefinition(self, definintion):
+        # Read FileLocation from cfg, confirm files from settings.cfg exist
+        sourceDir = None
+        with open(SETTINGS_CFG, "r", encoding="utf-8") as f:
+            for line in f:
+                if line.startswith("FileLocation:"):
+                    sourceDir = line.split("FileLocation:", 1)[1].strip()
+                    break
+
+        if not sourceDir or not os.path.isdir(sourceDir):
+            messagebox.showerror("Write Error", "Invalid or missing FileLocation in config.cfg.")
+            return
+
+        # Write definition to file, making sure to write at the end of the file on a new line
+        def_path = os.path.join(sourceDir, DEFINITION_FILE)
+        try:
+            with open(def_path, "a", encoding="utf-8") as f:
+                if os.path.getsize(def_path) > 0:
+                    f.write("\n")
+                f.write(definintion)
+            messagebox.showinfo("Write Complete", f"Definition written to {DEFINITION_FILE}")
+        except Exception as e:
+            messagebox.showerror("Write Error", str(e))
+
+        return
+
+    def writeSettings(self, settings):
+        pass
 
     # Backup function copy the existing custom color definition and settings files
     def backup(self):
