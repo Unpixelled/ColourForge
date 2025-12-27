@@ -17,6 +17,10 @@ TEMPLATES_DIR = os.path.join(BASE_DIR, "templates")
 # Path to settings.cfg
 SETTINGS_CFG = os.path.join(BASE_DIR, "settings.cfg")
 
+# File names for Stud.io export
+DEFINITION_FILE = "CustomColorDefinition.txt"
+SETTINGS_FILE = "CustomColorSettings.xml"
+
 # Fade Duration for splash screen
 FADE_DURATION = 2.0
 
@@ -527,16 +531,40 @@ class FormFactoryApp(tk.Tk):
 
     # Export code to stud.io files
     def exportCode(self):
+
         # Validate inputs first — abort if validation fails
         out = self.generateOutput()
         if out is None:
-            return
-        messagebox.showinfo("Export", "Export functionality is not yet implemented.")
-        #Read FileLocation from settings.cfg
-        #Generate output code
-        #split output code into definition and settings parts and remove titles
-        #Add newline to definition file and write definition file
-        #Locate end tag in settings file and write to the line before that
+            return None
+        
+        # Split using explicit headers present in template output
+        defMarkerText = "<<< Colour Definition >>>"
+        setMarkerText = "<<< Colour Settings >>>"
+
+        defIdentifier = out.find(defMarkerText)
+        setIdentifier = out.find(setMarkerText)
+
+        if defIdentifier == -1 or setIdentifier == -1 or defIdentifier > setIdentifier:
+            messagebox.showerror("Export Error", "Definition/Settings headers not found or in wrong order in generated output.")
+            return None
+
+        # Extract definition and settings sections
+        definition = out[defIdentifier + len(defMarkerText):setIdentifier].strip()
+        settings = out[setIdentifier + len(setMarkerText):].strip()
+
+        # Show message boxes containing each section for user review 
+        ##TODO Replace with export
+        try:
+            messagebox.showinfo("Definition", definition if definition else "(empty)")
+        except Exception:
+            pass
+
+        try:
+            messagebox.showinfo("Settings", settings if settings else "(empty)")
+        except Exception:
+            pass
+
+        return definition, settings
 
     # Backup function copy the existing custom color definition and settings files
     def backup(self):
@@ -561,7 +589,7 @@ class FormFactoryApp(tk.Tk):
             os.makedirs(backup_dir, exist_ok=True)
 
             timestamp = time.strftime("%y%m%d_%H%M")
-            files_to_backup = ["CustomColorDefinition.txt", "CustomColorSettings.xml"]
+            files_to_backup = [DEFINITION_FILE, SETTINGS_FILE]
 
             copied = []
 
