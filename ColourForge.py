@@ -583,7 +583,7 @@ class FormFactoryApp(tk.Tk):
                 if os.path.getsize(def_path) > 0:
                     f.write("\n")
                 f.write(definintion)
-            messagebox.showinfo("Write Complete", f"Definition written to {DEFINITION_FILE}")
+            messagebox.showinfo("Write Complete", f"Definition written to {DEFINITION_FILE}, proceed to settings export.")
         except Exception as e:
             messagebox.showerror("Write Error", str(e))
 
@@ -610,37 +610,79 @@ class FormFactoryApp(tk.Tk):
                 messagebox.showerror("Write Error", f"{SETTINGS_FILE} not found at target location.")
                 return
 
-            # Read the existing settings file into memory. ##TODO large files, can we read only the end
-            with open(set_path, "r", encoding="utf-8") as f:
-                content = f.read()
+            # Read only the tail of the file to locate SETTINGS_ENDING so we don't 
+            # load the entire multi-MB settings file into memory (at least mine is 2mb+)
+            size = os.path.getsize(set_path)
+            tail_read = 16384  # bytes to read from file end; should be sufficient to include ending
+            read_size = min(size, tail_read)
 
-            # Find the ending marker and insert settings immediately *before* it
-            # This preserves any existing whitespace/indentation that surrounds the tag
-            idx = content.find(SETTINGS_ENDING)
-            if idx != -1:
-                # Keep the exact 'before' and 'after' slices so we do not alter leading/trailing whitespace or indentation.
-                before = content[:idx]
-                after = content[idx:]
+            with open(set_path, "rb") as fr:
+                # Seek to the tail area and read it
+                if size > read_size:
+                    fr.seek(-read_size, os.SEEK_END)
+                else:
+                    fr.seek(0)
+                tail_bytes = fr.read()
+            try:
+                tail = tail_bytes.decode("utf-8")
+            except Exception:
+                # Fallback decode permissively
+                tail = tail_bytes.decode("utf-8", errors="replace")
 
-                # Ensure the insertion is separated from existing content by a newline
-                # if the file did not already end with one immediately before the tag
-                if not before.endswith("\n"):
-                    before += "\n"
-
-                # Add a newline after settings if it doesn't already end with one
-                settings_to_write = settings
-                if not settings_to_write.endswith("\n"):
-                    settings_to_write += "\n"
-
-                new_content = before + settings_to_write + after
-            else:
+            idx_in_tail = tail.find(SETTINGS_ENDING)
+            if idx_in_tail == -1:
                 # If the ending marker is not present, consider the settings file invalid and abort
                 messagebox.showerror("Write Error", f"{SETTINGS_FILE} is missing expected ending marker {SETTINGS_ENDING}; file appears invalid.")
                 return
 
-            with open(set_path, "w", encoding="utf-8") as f:
-                f.write(new_content)
-            messagebox.showinfo("Write Complete", f"Settings written to {SETTINGS_FILE}")
+            # Compute absolute byte position of the marker in the file
+            if size > read_size:
+                idx_abs = size - read_size + idx_in_tail
+            else:
+                idx_abs = idx_in_tail
+
+            # Prepare text to insert (ensure newline at end)
+            settings_to_write = settings
+            if not settings_to_write.endswith("\n"):
+                settings_to_write += "\n"
+
+            # Stream-copy: write a temp file by copying bytes up to idx_abs,
+            # then write the settings text (utf-8), then copy the remainder
+            tmp_path = set_path + ".tmp"
+            try:
+                with open(set_path, "rb") as fr, open(tmp_path, "wb") as fw:
+                    # Copy up to idx_abs
+                    remaining = idx_abs
+                    chunk = 8192
+                    while remaining > 0:
+                        to_read = chunk if remaining >= chunk else remaining
+                        data = fr.read(to_read)
+                        if not data:
+                            break
+                        fw.write(data)
+                        remaining -= len(data)
+
+                    # Ensure there's a newline before insertion if not present
+                    # Check last byte written in fw (seek)
+                    fw.flush()
+
+                    # Write settings text as utf-8
+                    fw.write(settings_to_write.encode("utf-8"))
+
+                    # Seek original to idx_abs and copy rest
+                    fr.seek(idx_abs)
+                    shutil.copyfileobj(fr, fw)
+
+                # Replace original file atomically
+                os.replace(tmp_path, set_path)
+            finally:
+                # Clean up temp if it still exists
+                if os.path.exists(tmp_path):
+                    try:
+                        os.remove(tmp_path)
+                    except Exception:
+                        pass
+            messagebox.showinfo("Write Complete", f"Settings written to {SETTINGS_FILE}, colour write complete.")
         except Exception as e:
             messagebox.showerror("Write Error", str(e))
         
