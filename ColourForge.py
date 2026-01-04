@@ -1,6 +1,7 @@
 ### Created By Unpixelled ###
 
 import os
+import re
 import sys
 import time
 import math
@@ -166,7 +167,7 @@ def rgbToLab(rgb):
     }
 
 # Calculates the Euclidean distance between two LAB colours
-def delteECalculation(l1, l2):
+def deltaECalculation(l1, l2):
     return math.sqrt(
         (l2["L"] - l1["L"]) ** 2 +
         (l2["a"] - l1["a"]) ** 2 +
@@ -210,7 +211,7 @@ def closestColour(rgb):
     input_lab = rgbToLab(rgb)
     best, dist = None, float("inf")
     for c in COLOUR_LIST:
-        d = delteECalculation(input_lab, rgbToLab(c["rgb"]))
+        d = deltaECalculation(input_lab, rgbToLab(c["rgb"]))
         if d < dist:
             best, dist = c["id"], d
     return best
@@ -476,7 +477,6 @@ class FormFactoryApp(tk.Tk):
                 out = out.replace(f"!ColourGValue{idx}!", str(rgb["g"] / 255), 1)
                 out = out.replace(f"!ColourBValue{idx}!", str(rgb["b"] / 255), 1)
             # Remove any indexed !HexN! and !ColourCategoryN! placeholders if present
-            import re
             out = re.sub(r"!Hex\d+!", "", out)
             out = re.sub(r"!ColourCategory\d+!", "", out)
         elif rgb_fields:
@@ -556,7 +556,7 @@ class FormFactoryApp(tk.Tk):
         return definition, settings
 
     # Writes the definition to the appropriate file
-    def writeDefinition(self, definintion):
+    def writeDefinition(self, definition):
         # Read FileLocation from cfg, confirm files from settings.cfg exist
         sourceDir = None
         with open(SETTINGS_CFG, "r", encoding="utf-8") as f:
@@ -575,7 +575,7 @@ class FormFactoryApp(tk.Tk):
             with open(def_path, "a", encoding="utf-8") as f:
                 if os.path.getsize(def_path) > 0:
                     f.write("\n")
-                f.write(definintion)
+                f.write(definition)
             messagebox.showinfo("Write Complete", f"Definition written to {DEFINITION_FILE}, proceed to settings export.")
         except Exception as e:
             messagebox.showerror("Write Error", str(e))

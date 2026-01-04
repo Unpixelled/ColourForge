@@ -38,6 +38,6 @@ This is still being tested as it massively inflates the file size.
 - Linux and MacOS support
 - Language support (potential collaboration needed)
 - Custom group export/inclusion
-- Gradient Support
-- Display colours selected
-- Render a brick if possible as changes are made
+- Gradient Support and control
+- Display colours selected somehow in interface
+- Render a brick if possible as changes are made (the dream)
