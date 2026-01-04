@@ -29,15 +29,18 @@ FADE_DURATION = 2.0
 CHECKBOX_CHECKED_VALUE = "0.62"
 CHECKBOX_UNCHECKED_VALUE = "1.0"
 
+############################################################
 # Unpixelled's ColourForge
-# --------------------------
+############################################################
+
+# ----------------------------------------------------------
 # This application dynamically generates a XML colour code for Bricklink's Stud.io
 # based on a template file, by users entering input, and produces output code by replacing 
 # placeholders in the template with the provided values. Supports numbers, text, checkboxes,
 # and multiple RGB colour pickers.
 # Through this method, the app is expandable to as many templates as desired, without needing
 # to modify the application code itself.
-# --------------------------
+# ----------------------------------------------------------
 
 ##TODO:
 # - Scrollbar or dynamic resizing for long forms
@@ -107,9 +110,10 @@ def splashLogoAtStart(image_path: str, fade_duration: float):
 ############################################################
 # Utility functions for label/colour formatting
 ############################################################
-    # Normalises a label by making it lowercase and removing non-alphanumeric characters
-    # Formats a colour name for use as a setting (uppercase, underscores)
-    # Converts RGB values to a hex string
+
+# Normalises a label by making it lowercase and removing non-alphanumeric characters
+# Formats a colour name for use as a setting (uppercase, underscores)
+# Converts RGB values to a hex string
 
 def normaliseLabel(label: str) -> str:
     return "".join(c for c in label.lower().strip() if c.isalnum())
@@ -133,10 +137,11 @@ def rgbToHex(r, g, b):
 ############################################################
 # Colour math and colour matching
 ############################################################
-    # Converts an RGB dictionary to CIE LAB colour space for colour comparison
-    # Calculates the Euclidean distance between two LAB colours
-    # List of known colours for closest colour matching
-    # Finds the closest colour in COLOUR_LIST to the given RGB value
+
+# Converts an RGB dictionary to CIE LAB colour space for colour comparison
+# Calculates the Euclidean distance between two LAB colours
+# List of known colours for closest colour matching
+# Finds the closest colour in COLOUR_LIST to the given RGB value
 
 # Converts an RGB dictionary to CIE LAB colour space for colour comparison
 def rgbToLab(rgb):
@@ -214,23 +219,24 @@ def closestColour(rgb):
 ############################################################
 # Main Application Class
 ############################################################
-    # Main application class for the ColourForge form generator
-    # List of tuples: (key, field type, tk variable)
-    # Populated in createField()
-    # Holds the code block (template) loaded from the selected template file
-    # Build the GUI widgets and load available templates
-    # Create the top bar with template selection
-    # Frame where form fields will be dynamically created
-    # Loads available template files from the templates directory
-    # Clears all form fields and resets the code block
-    # Loads the selected template and parses it to build the form
-    # Parses the template file, creating form fields and extracting the code block
-    # Dynamically creates a form field of the given type and label
-    # Key is a normalised version of the label, used for variable lookup
-    # Create the appropriate Tkinter variable and widget for each field type
-    # Store the field for later use in output generation
-    # Opens a colour picker dialog and sets the selected colour
-    # If there are associated rvalue/gvalue/bvalue fields, set them as well
+
+# Main application class for the ColourForge form generator
+# List of tuples: (key, field type, tk variable)
+# Populated in createField()
+# Holds the code block (template) loaded from the selected template file
+# Build the GUI widgets and load available templates
+# Create the top bar with template selection
+# Frame where form fields will be dynamically created
+# Loads available template files from the templates directory
+# Clears all form fields and resets the code block
+# Loads the selected template and parses it to build the form
+# Parses the template file, creating form fields and extracting the code block
+# Dynamically creates a form field of the given type and label
+# Key is a normalised version of the label, used for variable lookup
+# Create the appropriate Tkinter variable and widget for each field type
+# Store the field for later use in output generation
+# Opens a colour picker dialog and sets the selected colour
+# If there are associated rvalue/gvalue/bvalue fields, set them as well
 
 class FormFactoryApp(tk.Tk):
     def __init__(self):
@@ -370,36 +376,12 @@ class FormFactoryApp(tk.Tk):
     # Output Generation Logic
     ############################################################
     def generateOutput(self):
-        """
-        Generates the output code by replacing placeholders in the template with user-provided values.
-        - Fields are collected in order of appearance.
-        - Only the first RGB picker fills !Hex! and !ColourCategory!.
-        - Each picker fills its own indexed RGB placeholders.
-        - Number, text, and checkbox fields are filled sequentially.
-        """
-            # Lists to hold values for each field type, in order of appearance
-            # text_values: All text field values
-            # number_values: All number field values (excluding RGB r/g/b fields)
-            # checkbox_values: All checkbox field values (as strings)
-            # pickers: Each picker is a dict with r, g, b
-            # colourname: Value for !ColourName! placeholder
-            # colourid: Value for !ColourID! placeholder
-            # rgb_fields: For legacy rvalue/gvalue/bvalue fields
-            # Collect all field values in order, and build picker/rgb lists
-                        # Exclude number fields that are part of RGB (rvalue, gvalue, bvalue)
-                        # Checkbox is 0.62 if checked, 1.0 if not
-                        # Parse hex string to r/g/b and store in pickers list
-                    # For legacy rvalue/gvalue/bvalue fields, group by prefix
-            # Sort pickers by their order of appearance (defensive, should already be correct)
-            # Helper to replace placeholders sequentially with values from a list
-            # Replace !number!, !text!, !checkbox! in order of appearance
-            # Replace RGB picker values in order
-            # Only the first picker fills !Hex! and !ColourCategory!
-                    # Remove any indexed !HexN! and !ColourCategoryN! placeholders if present
-            # Fallback: legacy behaviour for rvalue/gvalue/bvalue fields
-            # Replace colourname and colourid placeholders
-            # Copies the generated code to the clipboard
-            # Saves the generated code to a file
+        # Generates the output code by replacing placeholders in the template with user-provided values.
+        # Fields are collected in order of appearance.
+        # Only the first RGB picker fills !Hex! and !ColourCategory! as it is considered the "main" colour.
+        # Each picker fills its own indexed RGB placeholders, supporting multiple colours.
+        # Number, text, and checkbox fields are filled sequentially.
+
         out = self.code_block
 
         # Collect all values by type in order, but keep pickers and numbers separate
@@ -442,7 +424,7 @@ class FormFactoryApp(tk.Tk):
                     g = int(hex_val[3:5], 16)
                     b = int(hex_val[5:7], 16)
                     pickers.append({"r": r, "g": g, "b": b, "_order": len(pickers)})
-            # For legacy rvalue/gvalue/bvalue fields - validate integers
+            # For legacy rvalue/gvalue/bvalue fields from JS version - validate integers
             if key.endswith("rvalue"):
                 try:
                     rgb_fields.setdefault(key[:-6], {})["r"] = int(val)
@@ -498,7 +480,7 @@ class FormFactoryApp(tk.Tk):
             out = re.sub(r"!Hex\d+!", "", out)
             out = re.sub(r"!ColourCategory\d+!", "", out)
         elif rgb_fields:
-            # Fallback: legacy behaviour for rvalue/gvalue/bvalue fields
+            # Fallback: legacy behaviour for rvalue/gvalue/bvalue fields from JS version
             for idx, (prefix, rgb) in enumerate(rgb_fields.items()):
                 if all(k in rgb for k in ("r", "g", "b")):
                     if idx == 0:
@@ -584,7 +566,7 @@ class FormFactoryApp(tk.Tk):
                     break
 
         if not sourceDir or not os.path.isdir(sourceDir):
-            messagebox.showerror("Write Error", "Invalid or missing FileLocation in config.cfg.")
+            messagebox.showerror("Write Error", "Invalid or missing FileLocation in settings.cfg.")
             return
 
         # Write definition to file, making sure to write at the end of the file on a new line
@@ -600,6 +582,7 @@ class FormFactoryApp(tk.Tk):
 
         return
 
+    # Writes the settings to the appropriate file
     def writeSettings(self, settings):
         # Read FileLocation from cfg, confirm files from settings.cfg exist
         sourceDir = None
@@ -610,7 +593,7 @@ class FormFactoryApp(tk.Tk):
                     break
 
         if not sourceDir or not os.path.isdir(sourceDir):
-            messagebox.showerror("Write Error", "Invalid or missing FileLocation in config.cfg.")
+            messagebox.showerror("Write Error", "Invalid or missing FileLocation in settings.cfg.")
             return
         
         # Write settings into the settings file, inserting them before SETTINGS_ENDING
@@ -715,7 +698,7 @@ class FormFactoryApp(tk.Tk):
                         break
 
             if not sourceDir or not os.path.isdir(sourceDir):
-                messagebox.showerror("Backup Error", "Invalid or missing FileLocation in config.cfg.")
+                messagebox.showerror("Backup Error", "Invalid or missing FileLocation in settings.cfg.")
                 return
 
             backup_dir = os.path.join(BASE_DIR, "backup")
