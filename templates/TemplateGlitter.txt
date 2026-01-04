@@ -20,7 +20,7 @@ end of form
 code
 
 <<< Colour Definition >>>
-!ColourID!	!ColourID!	!ColourID!	!ColourID!	!ColourName!	!ColourName!	!ColourName!	!ColourName!	!Hex!	!checkbox!	Glitter Colors	!ColourCategory!	to_lego			Glitter Colors
+!ColourID!	!ColourID!	!ColourID!	!ColourID!	Glitter !ColourName!	Glitter !ColourName!	Glitter !ColourName!	Glitter !ColourName!	!Hex!	!checkbox!	Glitter Colors	!ColourCategory!	to_lego			Glitter Colors
 
 <<< Colour Settings >>>
 <material displacement_method="bump" heterogeneous_volume="False" name="GLITTER-!ColourNameSetting!" use_local_tuning="False" use_mis="True" use_transparent_shadow="True" volume_interpolation_method="linear" volume_sampling_method="multiple_importance">
