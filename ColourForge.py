@@ -57,12 +57,6 @@ def checkOS():
 
 # Initial Logo Splash Screen
 def splashLogoAtStart(image_path: str, fade_duration: float):
-    """
-    Displays a splash image and fades it out over fade_duration seconds.
-    This is a blocking call and does NOT start mainloop().
-    Intended to be called immediately before creating the main app.
-    """
-
     root = tk.Tk()
     root.withdraw()
 
@@ -100,6 +94,7 @@ def splashLogoAtStart(image_path: str, fade_duration: float):
     alpha = 1.0
     delta = alpha / steps
 
+    # Fade out
     for _ in range(steps):
         alpha -= delta
         splash.attributes("-alpha", max(alpha, 0))
@@ -116,13 +111,13 @@ def splashLogoAtStart(image_path: str, fade_duration: float):
     # Formats a colour name for use as a setting (uppercase, underscores)
     # Converts RGB values to a hex string
 
-def normalize_label(label: str) -> str:
+def normaliseLabel(label: str) -> str:
     return "".join(c for c in label.lower().strip() if c.isalnum())
 
-def format_for_colour_name_setting(value: str) -> str:
+def formatColourName(value: str) -> str:
     return value.upper().replace(" ", "_")
 
-def rgb_to_hex(r, g, b):
+def rgbToHex(r, g, b):
     # Be tolerant of floats/strings and clamp to valid 0-255 ints
     try:
         r = int(round(float(r)))
@@ -144,7 +139,7 @@ def rgb_to_hex(r, g, b):
     # Finds the closest colour in COLOUR_LIST to the given RGB value
 
 # Converts an RGB dictionary to CIE LAB colour space for colour comparison
-def rgb_to_lab(rgb):
+def rgbToLab(rgb):
     r, g, b = rgb["r"] / 255, rgb["g"] / 255, rgb["b"] / 255
 
     def gamma(c):
@@ -166,7 +161,7 @@ def rgb_to_lab(rgb):
     }
 
 # Calculates the Euclidean distance between two LAB colours
-def delta_e(l1, l2):
+def delteECalculation(l1, l2):
     return math.sqrt(
         (l2["L"] - l1["L"]) ** 2 +
         (l2["a"] - l1["a"]) ** 2 +
@@ -174,7 +169,7 @@ def delta_e(l1, l2):
     )
 
 # List of known colours for closest colour matching
-# Some are directly from Stud.io
+# Some are directly from Stud.io, the names are only here for user clarification
 COLOUR_LIST = [
     {"id": -1, "name": "black", "rgb": {"r": 0, "g": 0, "b": 0}},
     {"id": -1, "name": "gray", "rgb": {"r": 51, "g": 51, "b": 51}},
@@ -206,11 +201,11 @@ COLOUR_LIST = [
 ]
 
 # Finds the closest colour in COLOUR_LIST to the given RGB value
-def closest_color(rgb):
-    input_lab = rgb_to_lab(rgb)
+def closestColour(rgb):
+    input_lab = rgbToLab(rgb)
     best, dist = None, float("inf")
     for c in COLOUR_LIST:
-        d = delta_e(input_lab, rgb_to_lab(c["rgb"]))
+        d = delteECalculation(input_lab, rgbToLab(c["rgb"]))
         if d < dist:
             best, dist = c["id"], d
     return best
@@ -334,7 +329,7 @@ class FormFactoryApp(tk.Tk):
         frame.pack(fill="x", pady=2)
 
         ttk.Label(frame, text=label).pack(side="left", padx=5)
-        key = normalize_label(label)
+        key = normaliseLabel(label)
 
         if ftype == "checkbox":
             var = tk.BooleanVar()
@@ -364,7 +359,7 @@ class FormFactoryApp(tk.Tk):
         if not c:
             return
         r, g, b = map(int, c)
-        var.set(rgb_to_hex(r, g, b))
+        var.set(rgbToHex(r, g, b))
 
         for suffix, value in zip(("rvalue", "gvalue", "bvalue"), (r, g, b)):
             for k, _, v, _ in self.fields:
@@ -492,8 +487,8 @@ class FormFactoryApp(tk.Tk):
                     out = out.replace("!ColourRValue!", str(rgb["r"] / 255), 1)
                     out = out.replace("!ColourGValue!", str(rgb["g"] / 255), 1)
                     out = out.replace("!ColourBValue!", str(rgb["b"] / 255), 1)
-                    out = out.replace("!Hex!", rgb_to_hex(**rgb), 1)
-                    out = out.replace("!ColourCategory!", str(closest_color(rgb)), 1)
+                    out = out.replace("!Hex!", rgbToHex(**rgb), 1)
+                    out = out.replace("!ColourCategory!", str(closestColour(rgb)), 1)
                 idx = i + 1
                 out = out.replace(f"!ColourRValue{idx}!", str(rgb["r"] / 255), 1)
                 out = out.replace(f"!ColourGValue{idx}!", str(rgb["g"] / 255), 1)
@@ -510,19 +505,19 @@ class FormFactoryApp(tk.Tk):
                         out = out.replace("!ColourRValue!", str(rgb["r"] / 255), 1)
                         out = out.replace("!ColourGValue!", str(rgb["g"] / 255), 1)
                         out = out.replace("!ColourBValue!", str(rgb["b"] / 255), 1)
-                        out = out.replace("!Hex!", rgb_to_hex(**rgb), 1)
-                        out = out.replace("!ColourCategory!", str(closest_color(rgb)), 1)
+                        out = out.replace("!Hex!", rgbToHex(**rgb), 1)
+                        out = out.replace("!ColourCategory!", str(closestColour(rgb)), 1)
                     idx1 = idx + 1
                     out = out.replace(f"!ColourRValue{idx1}!", str(rgb["r"] / 255), 1)
                     out = out.replace(f"!ColourGValue{idx1}!", str(rgb["g"] / 255), 1)
                     out = out.replace(f"!ColourBValue{idx1}!", str(rgb["b"] / 255), 1)
-                    out = out.replace(f"!Hex{idx1}!", rgb_to_hex(**rgb), 1)
-                    out = out.replace(f"!ColourCategory{idx1}!", str(closest_color(rgb)), 1)
+                    out = out.replace(f"!Hex{idx1}!", rgbToHex(**rgb), 1)
+                    out = out.replace(f"!ColourCategory{idx1}!", str(closestColour(rgb)), 1)
 
         # Replace colourname and colourid
         if colourname is not None:
             out = out.replace("!ColourName!", colourname)
-            out = out.replace("!ColourNameSetting!", format_for_colour_name_setting(colourname))
+            out = out.replace("!ColourNameSetting!", formatColourName(colourname))
         if colourid is not None:
             out = out.replace("!ColourID!", colourid)
 
@@ -704,7 +699,7 @@ class FormFactoryApp(tk.Tk):
         
         return
 
-    # Backup function copy the existing custom color definition and settings files
+    # Backup function copy the existing custom colour definition and settings files
     def backup(self):
         try:
             if not os.path.isfile(SETTINGS_CFG):
