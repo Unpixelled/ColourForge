@@ -39,6 +39,22 @@ CHECKBOX_UNCHECKED_VALUE = "1.0"
 # to modify the application code itself.
 # --------------------------
 
+##TODO:
+# - Scrollbar or dynamic resizing for long forms
+# - Scan for group inclusion and add predefined group code if needed (big feature)
+# - Gradient support (big feature)
+# - Improve error handling and user feedback
+# - Multiple OS support
+# - Dictionary to support multiple languages
+
+# Check OS - currently only windows supported
+def checkOS():
+    if os.name == "nt":
+        return True
+    else:
+        print("This application currently only supports Windows.")
+        return False
+
 # Initial Logo Splash Screen
 def splashLogoAtStart(image_path: str, fade_duration: float):
     """
@@ -755,6 +771,10 @@ class FormFactoryApp(tk.Tk):
 ############################################################
 
 if __name__ == "__main__":
+    #Check OS
+    if not checkOS():
+        sys.exit(1)
+
     #Show the splash screen logo
     splashLogoAtStart("splash.png", FADE_DURATION)
 

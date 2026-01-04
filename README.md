@@ -25,7 +25,7 @@ Templates are stored in the `templates/` directory.
 ## Running the Application
 
 1. Ensure Python is installed and available on your PATH
-2. Place the application files in a directory (I recommend keeping them in the folder)
+2. Place all application files in a directory (keep them in the same folder)
 3. Open the directory in the command line and type:
     python ColourForge.py
 
@@ -33,3 +33,11 @@ Using the following command, this can be made into a executable:
 pyinstaller --onefile --noconsole App.py
 
 This is still being tested as it massively inflates the file size.
+
+## Improvements and planned features:
+- Linux and MacOS support
+- Language support (potential collaboration needed)
+- Custom group export/inclusion
+- Gradient Support
+- Display colours selected
+- Render a brick if possible as changes are made
