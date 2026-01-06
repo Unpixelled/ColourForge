@@ -21,7 +21,12 @@ SETTINGS_CFG = os.path.join(BASE_DIR, "settings.cfg")
 # File names for Stud.io export
 DEFINITION_FILE = "CustomColorDefinition.txt"
 SETTINGS_FILE = "CustomColorSettings.xml"
+
+# Parsed Text Markers
+END_OF_FORM = "end of form"
 SETTINGS_ENDING = "</eyesight>"
+DEFINITION_MARKER = "<<< Colour Definition >>>\n"
+SETTINGS_MARKER = "<<< Colour Settings >>>\n"
 
 # Fade Duration for splash screen
 FADE_DURATION = 2.0
@@ -307,7 +312,7 @@ class FormFactoryApp(tk.Tk):
             if not line or line.startswith("//"):
                 continue
 
-            if line == "end of form":
+            if line == END_OF_FORM:
                 parsing_code = True
                 continue
 
@@ -533,21 +538,17 @@ class FormFactoryApp(tk.Tk):
         if out is None:
             return None
         
-        # Split using explicit headers present in template output
-        defMarkerText = "<<< Colour Definition >>>"
-        setMarkerText = "<<< Colour Settings >>>"
-
-        defIdentifier = out.find(defMarkerText)
-        setIdentifier = out.find(setMarkerText)
+        defIdentifier = out.find(DEFINITION_MARKER)
+        setIdentifier = out.find(SETTINGS_MARKER)
 
         if defIdentifier == -1 or setIdentifier == -1 or defIdentifier > setIdentifier:
             messagebox.showerror("Export Error", "Definition/Settings headers not found or in wrong order in generated output.")
             return None
 
         # Extract definition and settings sections
-        definition = out[defIdentifier + len(defMarkerText):setIdentifier].strip()
+        definition = out[defIdentifier + len(DEFINITION_MARKER):setIdentifier].strip()
         # Keep raw settings (do NOT strip) so leading whitespace/indentation is preserved
-        settings = out[setIdentifier + len(setMarkerText):]
+        settings = out[setIdentifier + len(SETTINGS_MARKER):]
 
         # Write to files
         self.writeDefinition(definition)
@@ -639,6 +640,9 @@ class FormFactoryApp(tk.Tk):
             settings_to_write = settings
             if not settings_to_write.endswith("\n"):
                 settings_to_write += "\n"
+
+            # Add a little comment to the end of the inserted settings
+            settings_to_write += f"<!-- Added by Unpixelled's ColourForge on {time.strftime('%Y-%m-%d %H:%M:%S')} -->\n\n"
 
             # Stream-copy: write a temp file by copying bytes up to idx_abs,
             # then write the settings text (utf-8), then copy the remainder

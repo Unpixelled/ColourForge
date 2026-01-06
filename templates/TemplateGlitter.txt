@@ -43,3 +43,4 @@ code
 		<connect from_node="GLITTER-TRANS-GROUP" from_socket="Volume" to_node="Output" to_socket="Volume" />
 	</shader>
 </material>
+<!-- Template By Unpixelled -->

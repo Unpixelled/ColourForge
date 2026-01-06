@@ -41,3 +41,4 @@ code
 		<connect from_node="TranslucentBSDF" from_socket="BSDF" to_node="AddShader" to_socket="Shader2" />
 	</shader>
 </material>
+<!-- Template By Unpixelled -->
