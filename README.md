@@ -40,4 +40,6 @@ This is still being tested as it massively inflates the file size.
 - Custom group export/inclusion
 - Gradient Support and control
 - Display colours selected somehow in interface
+- Recommended values in templates or autofill
+- Accuracy of estimated colour category
 - Render a brick if possible as changes are made (the dream)
