@@ -282,24 +282,28 @@ class FormFactoryApp(tk.Tk):
         ttk.Button(btns, text="Settings", command=self.openSettings).pack(side="right", padx=5)
         ttk.Button(btns, text="Backup", command=self.backup).pack(side="right", padx=5)
 
+    # Loads available template files from the templates directory
     def loadTemplates(self):
         if not os.path.isdir(TEMPLATES_DIR):
             os.makedirs(TEMPLATES_DIR)
         files = [f for f in os.listdir(TEMPLATES_DIR) if f.endswith(".txt")]
         self.template_combo["values"] = files
 
+    # Clears all form fields and resets the code block
     def clearForm(self):
         for w in self.form_frame.winfo_children():
             w.destroy()
         self.fields.clear()
         self.code_block = ""
 
+    # Loads the selected template and parses it to build the form
     def loadTemplate(self, *_):
         self.clearForm()
         path = os.path.join(TEMPLATES_DIR, self.template_var.get())
         with open(path, "r", encoding="utf-8") as f:
             self.parseTemplate(f.read())
 
+    # Parses the template file, creating form fields and extracting the code block
     def parseTemplate(self, content):
         lines = content.splitlines()
         section = None
@@ -336,6 +340,7 @@ class FormFactoryApp(tk.Tk):
 
         self.code_block = "\n".join(code_lines)
 
+    # Dynamically creates a form field of the given type and label
     def createField(self, parent, ftype, label):
         frame = ttk.Frame(parent)
         frame.pack(fill="x", pady=2)
@@ -366,6 +371,7 @@ class FormFactoryApp(tk.Tk):
         # Store label too so we can show friendly error messages on validation
         self.fields.append((key, ftype, var, label))
 
+    # Opens a colour picker dialog and sets the selected colour
     def pickColour(self, var, key):
         c = colorchooser.askcolor()[0]
         if not c:
@@ -421,6 +427,7 @@ class FormFactoryApp(tk.Tk):
                     except Exception:
                         messagebox.showerror("Input Error", f"Invalid number in field '{label}'. Please enter a numeric value.")
                         return None
+                    
             elif ftype == "checkbox":
                 checkbox_values.append(CHECKBOX_CHECKED_VALUE if var.get() else CHECKBOX_UNCHECKED_VALUE)
             elif ftype == "picker":
@@ -430,6 +437,7 @@ class FormFactoryApp(tk.Tk):
                     g = int(hex_val[3:5], 16)
                     b = int(hex_val[5:7], 16)
                     pickers.append({"r": r, "g": g, "b": b, "_order": len(pickers)})
+
             # For legacy rvalue/gvalue/bvalue fields from JS version - validate integers
             if key.endswith("rvalue"):
                 try:
@@ -462,6 +470,7 @@ class FormFactoryApp(tk.Tk):
             while placeholder in template and idx < len(values):
                 template = template.replace(placeholder, str(values[idx]), 1)
                 idx += 1
+
             return template
 
         out = replaceSequentially(out, "!number!", number_values)
@@ -477,13 +486,16 @@ class FormFactoryApp(tk.Tk):
                     out = out.replace("!ColourBValue!", str(rgb["b"] / 255), 1)
                     out = out.replace("!Hex!", rgbToHex(**rgb), 1)
                     out = out.replace("!ColourCategory!", str(closestColour(rgb)), 1)
+
                 idx = i + 1
                 out = out.replace(f"!ColourRValue{idx}!", str(rgb["r"] / 255), 1)
                 out = out.replace(f"!ColourGValue{idx}!", str(rgb["g"] / 255), 1)
                 out = out.replace(f"!ColourBValue{idx}!", str(rgb["b"] / 255), 1)
+
             # Remove any indexed !HexN! and !ColourCategoryN! placeholders if present
             out = re.sub(r"!Hex\d+!", "", out)
             out = re.sub(r"!ColourCategory\d+!", "", out)
+
         elif rgb_fields:
             # Fallback: legacy behaviour for rvalue/gvalue/bvalue fields from JS version
             for idx, (prefix, rgb) in enumerate(rgb_fields.items()):
@@ -494,6 +506,7 @@ class FormFactoryApp(tk.Tk):
                         out = out.replace("!ColourBValue!", str(rgb["b"] / 255), 1)
                         out = out.replace("!Hex!", rgbToHex(**rgb), 1)
                         out = out.replace("!ColourCategory!", str(closestColour(rgb)), 1)
+
                     idx1 = idx + 1
                     out = out.replace(f"!ColourRValue{idx1}!", str(rgb["r"] / 255), 1)
                     out = out.replace(f"!ColourGValue{idx1}!", str(rgb["g"] / 255), 1)
@@ -513,8 +526,14 @@ class FormFactoryApp(tk.Tk):
     # Copies the generated code to the clipboard
     def copyCode(self):
         out = self.generateOutput()
+
         if out is None:
             return
+        
+        # Add a little comment to the end of the inserted settings
+        out = out + f"<!-- Added by Unpixelled's ColourForge on {time.strftime('%Y-%m-%d %H:%M:%S')} -->"
+
+        # Copy to clipboard
         self.clipboard_clear()
         self.clipboard_append(out)
         messagebox.showinfo("Copied", "Code copied to clipboard")
@@ -522,11 +541,18 @@ class FormFactoryApp(tk.Tk):
     # Saves the generated code to a file
     def saveCode(self):
         path = filedialog.asksaveasfilename(defaultextension=".txt")
+
         if not path:
             return
+        
         out = self.generateOutput()
         if out is None:
             return
+        
+        # Add a little comment to the end of the inserted settings
+        out = out + f"<!-- Added by Unpixelled's ColourForge on {time.strftime('%Y-%m-%d %H:%M:%S')} -->"
+
+        # Write to file
         with open(path, "w", encoding="utf-8") as f:
             f.write(out)
 
