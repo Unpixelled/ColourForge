@@ -1,7 +1,7 @@
 section Colour Description
 text Colour Name
 number Colour ID
-checkbox Transparent Colour
+checkbox Transparent Colour (Editor Only)
 
 section Colour
 picker ColourPicker
