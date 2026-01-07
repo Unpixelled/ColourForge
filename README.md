@@ -43,3 +43,4 @@ This is still being tested as it massively inflates the file size.
 - Recommended values in templates or autofill
 - Accuracy of estimated colour category
 - Render a brick if possible as changes are made (the dream)
+- Texture support

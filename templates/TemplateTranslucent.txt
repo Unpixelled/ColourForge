@@ -21,7 +21,7 @@ code
 	<shader>
 		<color name="RGB_White" value="1.0 1.0 1.0" />
 		<color name="RGB" value="!ColourRValue! !ColourGValue! !ColourBValue!" />
-		add_closure name="AddShader" />
+		<add_closure name="AddShader" />
 		<translucent_bsdf name="TranslucentBSDF">
 			<input name="Normal" type="vector" value="0.0 0.0 0.0" />
 		</translucent_bsdf>

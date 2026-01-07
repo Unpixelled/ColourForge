@@ -405,6 +405,9 @@ class FormFactoryApp(tk.Tk):
         colourid = None
         rgb_fields = {}
 
+        if not self.validateFields():
+            return None
+
         # Ensure pickers are appended in the order they appear in the form
         for key, ftype, var, label in self.fields:
             val = var.get()
@@ -522,6 +525,25 @@ class FormFactoryApp(tk.Tk):
             out = out.replace("!ColourID!", colourid)
 
         return out
+    
+    # Confirm fields are valid before output generation
+    def validateFields(self):
+        # Loop through fields to validate, one loop multiple checks for efficiency
+        for key, ftype, var, label in self.fields:
+            # First check that no fields are empty
+            val = var.get()
+            if ftype in ("text", "number", "picker") and (val is None or str(val).strip() == ""):
+                messagebox.showerror("Input Error", f"Field '{label}' is empty. Please provide a value.")
+                return False
+            
+            # Confirm the colour ID does not exceed 9 characters
+            if key == "colourid":
+                val = var.get()
+                if len(val) > 9:
+                    messagebox.showerror("Input Error", f"Colour ID '{val}' exceeds 9 characters. This will not appear in Stud.io's colour list.")
+                    return False
+
+        return True
 
     # Copies the generated code to the clipboard
     def copyCode(self):
@@ -559,7 +581,6 @@ class FormFactoryApp(tk.Tk):
     # Export code to stud.io files
     def exportCode(self):
 
-        # Validate inputs first — abort if validation fails
         out = self.generateOutput()
         if out is None:
             return None
