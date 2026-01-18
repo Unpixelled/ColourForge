@@ -1,6 +1,8 @@
 # Unpixelled's ColourForge
 A Custom Colour Maker for Bricklink's Stud.io
 
+V0.1.2
+
 ## Features
 
 - A variety of templates to choose from (easily expandable and supports custom types)

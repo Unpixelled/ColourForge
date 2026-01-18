@@ -9,6 +9,9 @@ import shutil
 import tkinter as tk
 from tkinter import ttk, filedialog, messagebox, colorchooser
 
+#Version
+VERSION = "0.1.2"
+
 # Current base directory
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -257,7 +260,7 @@ RESERVED_TERMS = [
 class FormFactoryApp(tk.Tk):
     def __init__(self):
         super().__init__()
-        self.title("Unpixelled's ColourForge")
+        self.title(f"Unpixelled's ColourForge V{VERSION}")
         self.geometry("900x700")
 
         self.fields = []
@@ -276,8 +279,24 @@ class FormFactoryApp(tk.Tk):
         self.template_combo.pack(side="left", padx=5)
         self.template_combo.bind("<<ComboboxSelected>>", self.loadTemplate)
 
-        self.form_frame = ttk.Frame(self)
-        self.form_frame.pack(fill="both", expand=True, padx=10, pady=10)
+        # Scrollable form area
+        container = ttk.Frame(self)
+        container.pack(fill="both", expand=True, padx=10, pady=10)
+
+        canvas = tk.Canvas(container)
+        scrollbar = ttk.Scrollbar(container, orient="vertical", command=canvas.yview)
+        self.form_frame = ttk.Frame(canvas)
+
+        self.form_frame.bind(
+            "<Configure>",
+            lambda e: canvas.configure(scrollregion=canvas.bbox("all"))
+        )
+
+        canvas.create_window((0, 0), window=self.form_frame, anchor="nw")
+        canvas.configure(yscrollcommand=scrollbar.set)
+
+        canvas.pack(side="left", fill="both", expand=True)
+        scrollbar.pack(side="right", fill="y")
 
         btns = ttk.Frame(self)
         btns.pack(fill="x", pady=10)
@@ -454,21 +473,30 @@ class FormFactoryApp(tk.Tk):
             # For legacy rvalue/gvalue/bvalue fields from JS version - validate integers
             if key.endswith("rvalue"):
                 try:
-                    rgb_fields.setdefault(key[:-6], {})["r"] = int(val)
+                    r_val = int(val)
+                    if not (0 <= r_val <= 255):
+                        raise ValueError("RGB value out of range")
+                    rgb_fields.setdefault(key[:-6], {})["r"] = r_val
                 except Exception:
-                    messagebox.showerror("Input Error", f"Invalid R value in field '{label}'. Please enter an integer.")
+                    messagebox.showerror("Input Error", f"Invalid R value in field '{label}'. Please enter an integer between 0 and 255.")
                     return None
             elif key.endswith("gvalue"):
                 try:
-                    rgb_fields.setdefault(key[:-6], {})["g"] = int(val)
+                    g_val = int(val)
+                    if not (0 <= g_val <= 255):
+                        raise ValueError("RGB value out of range")
+                    rgb_fields.setdefault(key[:-6], {})["g"] = g_val
                 except Exception:
-                    messagebox.showerror("Input Error", f"Invalid G value in field '{label}'. Please enter an integer.")
+                    messagebox.showerror("Input Error", f"Invalid G value in field '{label}'. Please enter an integer between 0 and 255.")
                     return None
             elif key.endswith("bvalue"):
                 try:
-                    rgb_fields.setdefault(key[:-6], {})["b"] = int(val)
+                    b_val = int(val)
+                    if not (0 <= b_val <= 255):
+                        raise ValueError("RGB value out of range")
+                    rgb_fields.setdefault(key[:-6], {})["b"] = b_val
                 except Exception:
-                    messagebox.showerror("Input Error", f"Invalid B value in field '{label}'. Please enter an integer.")
+                    messagebox.showerror("Input Error", f"Invalid B value in field '{label}'. Please enter an integer between 0 and 255.")
                     return None
 
         # Sort pickers by their order of appearance (just in case)
