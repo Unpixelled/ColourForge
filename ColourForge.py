@@ -221,6 +221,16 @@ def closestColour(rgb):
             best, dist = c["id"], d
     return best
 
+############################################################
+# Reserved Terms and input sanitisation
+############################################################
+
+RESERVED_TERMS = [
+    "solid",
+    "chrome",
+    "glitter"
+]
+
 
 ############################################################
 # Main Application Class
@@ -536,11 +546,17 @@ class FormFactoryApp(tk.Tk):
                 messagebox.showerror("Input Error", f"Field '{label}' is empty. Please provide a value.")
                 return False
             
-            # Confirm the colour ID does not exceed 9 characters
+            # Check name does not contain keywords used by Stud.io at the start of colour names
+            if key == "colourname":
+                if any(val.lower().startswith(term) for term in RESERVED_TERMS):
+                    messagebox.showerror("Input Error", f"Colour Name '{val}' contains a reserved keyword in Stud.io. Please choose a different name.")
+                    return False
+            
+            # Confirm the colour ID is an integer within range
             if key == "colourid":
-                val = var.get()
-                if len(val) > 9:
-                    messagebox.showerror("Input Error", f"Colour ID '{val}' exceeds 9 characters. This will not appear in Stud.io's colour list.")
+                val = int(var.get())
+                if val > 100000000 or val < 0:
+                    messagebox.showerror("Input Error", f"Colour ID '{val}' is out of range. This will not appear in Stud.io's colour list.")
                     return False
 
         return True
