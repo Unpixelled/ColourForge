@@ -386,6 +386,15 @@ class FormFactoryApp(tk.Tk):
         elif ftype == "text":
             var = tk.StringVar()
             widget = ttk.Entry(frame, textvariable=var)
+        elif ftype == "lightType":
+            var = tk.StringVar()
+            widget = ttk.Combobox(
+                frame,
+                textvariable=var,
+                state="readonly",
+                values=["Fresnel","Fac"]
+            )
+            widget.current(0)
         elif ftype == "picker":
             var = tk.StringVar(value="#ffffff")
             widget = ttk.Button(
@@ -432,6 +441,7 @@ class FormFactoryApp(tk.Tk):
         pickers = []  # Each picker is a dict with r, g, b
         colourname = None
         colourid = None
+        lightType = None
         rgb_fields = {}
 
         if not self.validateFields():
@@ -444,6 +454,8 @@ class FormFactoryApp(tk.Tk):
                 colourname = val
             elif key == "colourid":
                 colourid = val
+            elif key == "lightType":
+                lightType = val
             elif ftype == "text":
                 text_values.append(val)
             elif ftype == "number":
@@ -459,7 +471,6 @@ class FormFactoryApp(tk.Tk):
                     except Exception:
                         messagebox.showerror("Input Error", f"Invalid number in field '{label}'. Please enter a numeric value.")
                         return None
-                    
             elif ftype == "checkbox":
                 checkbox_values.append(CHECKBOX_CHECKED_VALUE if var.get() else CHECKBOX_UNCHECKED_VALUE)
             elif ftype == "picker":
@@ -555,12 +566,15 @@ class FormFactoryApp(tk.Tk):
                     out = out.replace(f"!Hex{idx1}!", rgbToHex(**rgb), 1)
                     out = out.replace(f"!ColourCategory{idx1}!", str(closestColour(rgb)), 1)
 
-        # Replace colourname and colourid
+        # Replace colourname, colourid, and lightType
         if colourname is not None:
             out = out.replace("!ColourName!", colourname)
             out = out.replace("!ColourNameSetting!", formatColourName(colourname))
         if colourid is not None:
             out = out.replace("!ColourID!", colourid)
+        if lightType is not None:
+            while "!lightType!" in out:
+                out = out.replace("!lightType!", lightType)
 
         return out
     

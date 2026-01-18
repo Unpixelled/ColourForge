@@ -16,9 +16,8 @@ number Glow Colour G value
 number Glow Colour B value
 number Glow strength
 number Glow blend
-text Glow Type
+lightType Light Type
 number Glow mix
-text Glow Type Duplicate
 
 end of form
 
@@ -45,12 +44,12 @@ code
 			<input name="Blend" type="float" value="!number!" />
 		</layer_weight>
 		<mix_closure name="MixShader">
-			<input name="!text!" type="float" value="!number!" />
+			<input name="!lightType!" type="float" value="!number!" />
 		</mix_closure>
 		<connect from_node="RGB" from_socket="Color" to_node="TRANS-NEON-GROUP" to_socket="Color" />
 		<connect from_node="RGB" from_socket="Color" to_node="TRANS-NEON-GROUP" to_socket="WhiteColor" />
 		<connect from_node="RGB" from_socket="Color" to_node="EmissionColor" to_socket="Color" />
-		<connect from_node="LayerWeight" from_socket="Fresnel" to_node="MixShader" to_socket="!text!" />
+		<connect from_node="LayerWeight" from_socket="!lightType!" to_node="MixShader" to_socket="Fac" />
 		<connect from_node="TRANS-NEON-GROUP" from_socket="Shader" to_node="MixShader" to_socket="Shader1" />
 		<connect from_node="EmissionColor" from_socket="Emission" to_node="MixShader" to_socket="Shader2" />
 		<connect from_node="MixShader" from_socket="Shader" to_node="Output" to_socket="Surface" />
