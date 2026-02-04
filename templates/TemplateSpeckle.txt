@@ -5,18 +5,22 @@ checkbox Transparent Colour (Editor Only)
 
 section Colour
 picker ColourPicker
+desc Select a main colour with the picker above.
 number Colour R value
 number Colour G value
 number Colour B value
 
 section Secondary
 picker Secondary ColourPicker
+desc Select a secondary colour with the picker above.
 number Secondary Colour R value
 number Secondary Colour G value
 number Secondary Colour B value
 
 section Offset
 number Offset
+desc Determines the amount of primary colour to the secondary colour.
+desc Full primary is 0, full secondary is 1.
 
 end of form
 

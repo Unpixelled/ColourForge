@@ -5,19 +5,24 @@ checkbox Transparent Colour (Editor Only)
 
 section Colour
 picker ColourPicker
+desc Select a main colour with the picker above.
 number Colour R value
 number Colour G value
 number Colour B value
 
 section Glow
 picker Glow ColourPicker
+desc Select a glow colour with the picker above.
 number Glow Colour R value
 number Glow Colour G value
 number Glow Colour B value
 number Glow strength
+desc Default glow strength: 400
 number Glow blend
+desc Default glow blend: 0.01
 lightType Light Type
 number Glow mix
+desc Default glow mix: 0.05
 
 end of form
 

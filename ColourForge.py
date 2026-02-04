@@ -10,7 +10,7 @@ import tkinter as tk
 from tkinter import ttk, filedialog, messagebox, colorchooser
 
 #Version
-VERSION = "0.1.2"
+VERSION = "0.1.3"
 
 # Current base directory
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -381,6 +381,7 @@ class FormFactoryApp(tk.Tk):
 
     # Dynamically creates a form field of the given type and label
     def createField(self, parent, ftype, label):
+
         frame = ttk.Frame(parent)
         frame.pack(fill="x", pady=2)
 
@@ -412,6 +413,10 @@ class FormFactoryApp(tk.Tk):
                 text="Pick",
                 command=lambda v=var, k=key: self.pickColour(v, k)
             )
+        elif ftype == "desc":
+            var = None
+            widget = ttk.Label(frame, text=label)
+            return
         else:
             return
 

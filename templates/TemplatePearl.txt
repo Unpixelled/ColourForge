@@ -5,12 +5,19 @@ checkbox Transparent Colour (Editor Only)
 
 section Colour
 picker ColourPicker
+desc Select a colour with the picker above.
 number Colour R value
 number Colour G value
 number Colour B value
 number Subsurface
+desc The radius of how far light can go under the surface
+desc Default subsurface: 0.712000
 number Clearcoat
+desc A layer of surface glossiness
+desc Default clearcoat: 0
 number Metallic
+desc A layer of surface metallic reflectivity
+desc Default metallic: 0
 
 end of form
 

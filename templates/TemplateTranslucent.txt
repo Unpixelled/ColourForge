@@ -5,6 +5,7 @@ checkbox Transparent Colour (Editor Only)
 
 section Colour
 picker ColourPicker
+desc Select a colour with the picker above.
 number Colour R value
 number Colour G value
 number Colour B value

@@ -5,19 +5,26 @@ checkbox Transparent Colour (Editor Only)
 
 section Colour
 picker ColourPicker
+desc Select a colour with the picker above.
 number Colour R value
 number Colour G value
 number Colour B value
 
 section Chips
 picker Chips ColourPicker
+desc Select a colour for the chips inside the satin with the picker above.
 number Chips Colour R value
 number Chips Colour G value
 number Chips Colour B value
 
 number Subsurface
+desc The radius of how far light can go under the surface
+desc Default subsurface: 1.0
 number Clearcoat
+desc A layer of surface glossiness
+desc Default clearcoat: 0
 number VoronoiTextureScale
+desc Default value range: 100-300
 
 end of form
 

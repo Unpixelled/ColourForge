@@ -5,12 +5,14 @@ checkbox Transparent Colour (Editor Only)
 
 section Colour
 picker ColourPicker
+desc Select a colour with the picker above.
 number Colour R value
 number Colour G value
 number Colour B value
 
 section Chips
 picker Chips ColourPicker
+desc Select a colour for the chips inside the glitter with the picker above.
 number Chips Colour R value
 number Chips Colour G value
 number Chips Colour B value

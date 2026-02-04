@@ -5,12 +5,14 @@ checkbox Transparent Colour (Editor Only)
 
 section Colour
 picker ColourPicker
+desc Select a colour with the picker above.
 number Colour R value
 number Colour G value
 number Colour B value
 
 section GlowDark
 picker GlowDark ColourPicker
+desc Select a glow colour with the picker above.
 number GlowDark Colour R value
 number GlowDark Colour G value
 number GlowDark Colour B value
