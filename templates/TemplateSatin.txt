@@ -1,0 +1,57 @@
+section Colour Description
+text Colour Name
+number Colour ID
+checkbox Transparent Colour (Editor Only)
+
+section Colour
+picker ColourPicker
+number Colour R value
+number Colour G value
+number Colour B value
+
+section Chips
+picker Chips ColourPicker
+number Chips Colour R value
+number Chips Colour G value
+number Chips Colour B value
+
+number Subsurface
+number Clearcoat
+number VoronoiTextureScale
+
+end of form
+
+code
+
+<<< Colour Definition >>>
+!ColourID!	!ColourID!	!ColourID!	!ColourID!	Satin !ColourName!	Satin !ColourName!	Satin !ColourName!	Satin !ColourName!	!Hex!	!checkbox!	Satin Colors	!ColourCategory!	to_lego			Satin Colors
+
+<<< Colour Settings >>>
+<material name="SATIN-!ColourNameSetting!" diffuse_ao_factor="1.0" displacement_method="bump"
+	glossy_ao_factor="0.0" heterogeneous_volume="False" subsurface_ao_factor="0.0"
+	subsurface_factor="1.100000023841858" transmission_ao_factor="0.0" use_local_tuning="True"
+	use_mis="True" use_transparent_shadow="True" volume_interpolation_method="linear"
+	volume_sampling_method="multiple_importance">
+	<shader>
+		<color name="RGB_White" value="1.0 0.90 0.90" />
+		<color name="RGB" value="!ColourRValue! !ColourGValue! !ColourBValue!" />
+		<color name="RGB_Chip" value="!ColourRValue2! !ColourGValue2! !ColourBValue2!" />
+		<group group_name="SATIN-GROUP" name="SATIN-GROUP">
+	    <input name="WhiteColor" type="color" />
+	    <input name="Color" type="color" />
+	    <input name="ChipColor" type="color" />
+			<input name="Subsurface" type="float" value="!number!" />
+			<input name="Clearcoat" type="float" value="!number!" />
+	    <input name="VoronoiTextureScale" type="float" value="!number!" />
+	    <output name="Volume" type="closure" />
+	    <output name="BSDF" type="closure" />
+	    <output name="Normal" type="vector" />
+		</group>
+    <connect from_node="RGB_White" from_socket="Color" to_node="SATIN-GROUP" to_socket="WhiteColor" />
+    <connect from_node="RGB" from_socket="Color" to_node="SATIN-GROUP" to_socket="Color" />
+    <connect from_node="RGB_Chip" from_socket="Color" to_node="SATIN-GROUP" to_socket="ChipColor" />
+    <connect from_node="SATIN-GROUP" from_socket="BSDF" to_node="Output" to_socket="Surface" />
+    <connect from_node="SATIN-GROUP" from_socket="Volume" to_node="Output" to_socket="Volume" />
+	</shader>
+</material>
+<!-- Template By Shushudancer -->

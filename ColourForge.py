@@ -38,6 +38,9 @@ FADE_DURATION = 2.0
 CHECKBOX_CHECKED_VALUE = "0.62"
 CHECKBOX_UNCHECKED_VALUE = "1.0"
 
+# Size of dropdown box
+DROPDOWN_WIDTH = 50
+
 ############################################################
 # Unpixelled's ColourForge
 ############################################################
@@ -229,9 +232,16 @@ def closestColour(rgb):
 ############################################################
 
 RESERVED_TERMS = [
-    "solid",
     "chrome",
-    "glitter"
+    "glitter",
+    "metal",
+    "milky",
+    "pearl",
+    "rubber",
+    "satin",
+    "solid",
+    "speckle",
+    "trans"
 ]
 
 
@@ -275,7 +285,7 @@ class FormFactoryApp(tk.Tk):
 
         ttk.Label(top, text="Template:").pack(side="left")
         self.template_var = tk.StringVar()
-        self.template_combo = ttk.Combobox(top, textvariable=self.template_var, state="readonly")
+        self.template_combo = ttk.Combobox(top, textvariable=self.template_var, state="readonly", width=DROPDOWN_WIDTH)
         self.template_combo.pack(side="left", padx=5)
         self.template_combo.bind("<<ComboboxSelected>>", self.loadTemplate)
 
