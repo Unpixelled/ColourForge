@@ -69,6 +69,14 @@ def checkOS():
     else:
         print("This application currently only supports Windows.")
         return False
+    
+# Check Python version
+def checkPython():
+    if sys.version_info >= (3, 9):
+        return True
+    else:
+        print("This application requires Python 3.9 or higher.")
+        return False
 
 # Initial Logo Splash Screen
 def splashLogoAtStart(image_path: str, fade_duration: float):
@@ -877,8 +885,11 @@ if __name__ == "__main__":
     if not checkOS():
         sys.exit(1)
 
+    if not checkPython():
+        sys.exit(1)
+
     #Show the splash screen logo
-    splashLogoAtStart("splash.png", FADE_DURATION)
+    splashLogoAtStart(os.path.join(BASE_DIR, "splash.png"), FADE_DURATION)
 
     #Begin main application
     FormFactoryApp().mainloop()
