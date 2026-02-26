@@ -10,7 +10,7 @@ import tkinter as tk
 from tkinter import ttk, filedialog, messagebox, colorchooser
 
 #Version
-VERSION = "0.1.4"
+VERSION = "0.1.5"
 
 # Current base directory
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -402,6 +402,9 @@ class FormFactoryApp(tk.Tk):
         elif ftype == "number":
             var = tk.StringVar()
             widget = ttk.Entry(frame, textvariable=var)
+            # If this is an RGB field, add a trace to update the picker for updates
+            if key.endswith("rvalue") or key.endswith("gvalue") or key.endswith("bvalue"):
+                var.trace_add("write", lambda *_, k=key: self.onRgbFieldChanged(k))
         elif ftype == "text":
             var = tk.StringVar()
             widget = ttk.Entry(frame, textvariable=var)
@@ -440,10 +443,58 @@ class FormFactoryApp(tk.Tk):
         r, g, b = map(int, c)
         var.set(rgbToHex(r, g, b))
 
+        # Temporarily disable RGB field traces to avoid feedback loop
+        self._updating_from_picker = True
         for suffix, value in zip(("rvalue", "gvalue", "bvalue"), (r, g, b)):
             for k, _, v, _ in self.fields:
                 if k == f"{key.replace('colourpicker','colour')}{suffix}":
                     v.set(str(value))
+        self._updating_from_picker = False
+
+    # Updates the picker hex value when RGB number fields are manually changed
+    def onRgbFieldChanged(self, changedKey):
+        # Avoid feedback loop when picker is updating RGB fields
+        if getattr(self, '_updating_from_picker', False):
+            return
+
+        # Determine the colour prefix based on which RGB field was changed
+        if changedKey.endswith("rvalue"):
+            prefix = changedKey[:-6]
+        elif changedKey.endswith("gvalue"):
+            prefix = changedKey[:-6]
+        elif changedKey.endswith("bvalue"):
+            prefix = changedKey[:-6]
+        else:
+            return
+
+        # Find the R, G, B field values
+        r_val, g_val, b_val = 0, 0, 0
+        for k, ftype, var, _ in self.fields:
+            if k == f"{prefix}rvalue":
+                try:
+                    r_val = int(var.get())
+                    r_val = max(0, min(255, r_val))
+                except (ValueError, tk.TclError):
+                    r_val = 0
+            elif k == f"{prefix}gvalue":
+                try:
+                    g_val = int(var.get())
+                    g_val = max(0, min(255, g_val))
+                except (ValueError, tk.TclError):
+                    g_val = 0
+            elif k == f"{prefix}bvalue":
+                try:
+                    b_val = int(var.get())
+                    b_val = max(0, min(255, b_val))
+                except (ValueError, tk.TclError):
+                    b_val = 0
+
+        # Find and update the associated picker
+        picker_key = f"{prefix}picker"
+        for k, ftype, var, _ in self.fields:
+            if k == picker_key and ftype == "picker":
+                var.set(rgbToHex(r_val, g_val, b_val))
+                break
 
     ############################################################
     # Output Generation Logic
