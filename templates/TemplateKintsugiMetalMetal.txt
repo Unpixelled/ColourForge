@@ -12,11 +12,10 @@ number Colour B value
 
 section Cracks
 picker Cracks ColourPicker
-desc Select a crack colour with the picker above.
+desc Select a metalic crack colour with the picker above.
 number Cracks Colour R value
 number Cracks Colour G value
 number Cracks Colour B value
-number Cracks Glow strength
 
 end of form
 
