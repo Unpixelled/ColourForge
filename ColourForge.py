@@ -45,6 +45,10 @@ DROPDOWN_WIDTH = 50
 COLOUR_BAR_WIDTH = 80  # Width in pixels
 COLOUR_BAR_HEIGHT = 20  # Height in pixels
 
+# Miscellaneous constants
+CHUNK_SIZE = 8192  # For file copying in chunks to avoid memory issues with large files
+TAIL_READ = 16384  # Read last 16KB of file to check for existing entries without loading whole file into memory
+
 ############################################################
 # Unpixelled's ColourForge
 ############################################################
@@ -85,7 +89,7 @@ def splashLogoAtStart(image_path: str, fade_duration: float):
     splash.overrideredirect(True)
     splash.attributes("-topmost", True)
 
-    # Load image
+    # Load image ##TODO if no image, just skip splash instead of exiting
     try:
         img = tk.PhotoImage(file=image_path)
     except Exception as e:
@@ -142,15 +146,21 @@ def formatColourName(value: str) -> str:
 def rgbToHex(r, g, b):
     # Be tolerant of floats/strings and clamp to valid 0-255 ints
     try:
-        r = int(round(float(r)))
-        g = int(round(float(g)))
-        b = int(round(float(b)))
-    except Exception:
+        r, g, b = (max(0, min(255, int(round(float(v))))) for v in (r, g, b))
+    except (ValueError, TypeError):
         r, g, b = 0, 0, 0
-    r = max(0, min(255, r))
-    g = max(0, min(255, g))
-    b = max(0, min(255, b))
     return f"#{r:02x}{g:02x}{b:02x}"
+
+def readFileLocationFromConfig():
+    if not os.path.isfile(SETTINGS_CFG):
+        return None
+    with open(SETTINGS_CFG, "r", encoding="utf-8") as f:
+        for line in f:
+            if line.startswith("FileLocation:"):
+                sourceDir = line.split("FileLocation:", 1)[1].strip()
+                # Return None if empty or not a valid directory
+                return sourceDir if sourceDir and os.path.isdir(sourceDir) else None
+    return None
 
 ############################################################
 # Colour math and colour matching
@@ -748,15 +758,9 @@ class FormFactoryApp(tk.Tk):
     # Writes the definition to the appropriate file
     def writeDefinition(self, definition):
         # Read FileLocation from cfg, confirm files from settings.cfg exist
-        sourceDir = None
-        with open(SETTINGS_CFG, "r", encoding="utf-8") as f:
-            for line in f:
-                if line.startswith("FileLocation:"):
-                    sourceDir = line.split("FileLocation:", 1)[1].strip()
-                    break
-
-        if not sourceDir or not os.path.isdir(sourceDir):
-            messagebox.showerror("Write Error", "Invalid or missing FileLocation in settings.cfg.")
+        sourceDir = readFileLocationFromConfig()
+        if not sourceDir:
+            messagebox.showerror("Definition Write Error", "Invalid or missing FileLocation in settings.cfg.")
             return
 
         # Write definition to file, making sure to write at the end of the file on a new line
@@ -766,39 +770,30 @@ class FormFactoryApp(tk.Tk):
                 if os.path.getsize(def_path) > 0:
                     f.write("\n")
                 f.write(definition)
-            messagebox.showinfo("Write Complete", f"Definition written to {DEFINITION_FILE}, proceed to settings export.")
+            messagebox.showinfo("Definition Write Complete", f"Definition written to {DEFINITION_FILE}, proceed to settings export.")
         except Exception as e:
-            messagebox.showerror("Write Error", str(e))
+            messagebox.showerror("Definition Write Error", str(e))
 
         return
 
     # Writes the settings to the appropriate file
     def writeSettings(self, settings):
         # Read FileLocation from cfg, confirm files from settings.cfg exist
-        sourceDir = None
-        with open(SETTINGS_CFG, "r", encoding="utf-8") as f:
-            for line in f:
-                if line.startswith("FileLocation:"):
-                    sourceDir = line.split("FileLocation:", 1)[1].strip()
-                    break
-
-        if not sourceDir or not os.path.isdir(sourceDir):
-            messagebox.showerror("Write Error", "Invalid or missing FileLocation in settings.cfg.")
+        sourceDir = readFileLocationFromConfig()
+        if not sourceDir:
+            messagebox.showerror("Settings Write Error", "Invalid or missing FileLocation in settings.cfg.")
             return
-        
+
         # Write settings into the settings file, inserting them before SETTINGS_ENDING
         set_path = os.path.join(sourceDir, SETTINGS_FILE)
-        try:
-            # If the settings file doesn't exist, do not create it — report an error
-            if not os.path.isfile(set_path):
-                messagebox.showerror("Write Error", f"{SETTINGS_FILE} not found at target location.")
-                return
+        tmp_path = set_path + ".tmp"
+        tmp_created = False
 
+        try:
             # Read only the tail of the file to locate SETTINGS_ENDING so we don't 
             # load the entire multi-MB settings file into memory (at least mine is 2mb+)
             size = os.path.getsize(set_path)
-            tail_read = 16384  # bytes to read from file end; should be sufficient to include ending
-            read_size = min(size, tail_read)
+            read_size = min(size, TAIL_READ)
 
             with open(set_path, "rb") as fr:
                 # Seek to the tail area and read it
@@ -816,7 +811,7 @@ class FormFactoryApp(tk.Tk):
             idx_in_tail = tail.find(SETTINGS_ENDING)
             if idx_in_tail == -1:
                 # If the ending marker is not present, consider the settings file invalid and abort
-                messagebox.showerror("Write Error", f"{SETTINGS_FILE} is missing expected ending marker {SETTINGS_ENDING}; file appears invalid.")
+                messagebox.showerror("Settings Write Error", f"{SETTINGS_FILE} is missing expected ending marker {SETTINGS_ENDING}; file appears invalid.")
                 return
 
             # Compute absolute byte position of the marker in the file
@@ -835,62 +830,53 @@ class FormFactoryApp(tk.Tk):
 
             # Stream-copy: write a temp file by copying bytes up to idx_abs,
             # then write the settings text (utf-8), then copy the remainder
-            tmp_path = set_path + ".tmp"
-            try:
-                with open(set_path, "rb") as fr, open(tmp_path, "wb") as fw:
-                    # Copy up to idx_abs
-                    remaining = idx_abs
-                    chunk = 8192
-                    while remaining > 0:
-                        to_read = chunk if remaining >= chunk else remaining
-                        data = fr.read(to_read)
-                        if not data:
-                            break
-                        fw.write(data)
-                        remaining -= len(data)
+            with open(set_path, "rb") as fr, open(tmp_path, "wb") as fw:
+                tmp_created = True
 
-                    # Ensure there's a newline before insertion if not present
-                    # Check last byte written in fw (seek)
-                    fw.flush()
+                # Copy up to idx_abs
+                remaining = idx_abs
+                while remaining > 0:
+                    to_read = CHUNK_SIZE if remaining >= CHUNK_SIZE else remaining
+                    data = fr.read(to_read)
+                    if not data:
+                        break
+                    fw.write(data)
+                    remaining -= len(data)
 
-                    # Write settings text as utf-8
-                    fw.write(settings_to_write.encode("utf-8"))
+                # Ensure there's a newline before insertion if not present
+                # Check last byte written in fw (seek)
+                fw.flush()
 
-                    # Seek original to idx_abs and copy rest
-                    fr.seek(idx_abs)
-                    shutil.copyfileobj(fr, fw)
+                # Write settings text as utf-8
+                fw.write(settings_to_write.encode("utf-8"))
 
-                # Replace original file atomically
-                os.replace(tmp_path, set_path)
-            finally:
-                # Clean up temp if it still exists
-                if os.path.exists(tmp_path):
-                    try:
-                        os.remove(tmp_path)
-                    except Exception:
-                        pass
-            messagebox.showinfo("Write Complete", f"Settings written to {SETTINGS_FILE}, colour write complete.")
+                # Seek original to idx_abs and copy rest
+                fr.seek(idx_abs)
+                shutil.copyfileobj(fr, fw)
+
+            # Replace original file atomically
+            os.replace(tmp_path, set_path)
+            tmp_created = False  # Successfully replaced, no cleanup needed
+
+            messagebox.showinfo("Settings Write Complete", f"Settings written to {SETTINGS_FILE}, colour write complete.")
+
         except Exception as e:
-            messagebox.showerror("Write Error", str(e))
-        
-        return
+            messagebox.showerror("Settings Write Error", str(e))
+
+        finally:
+            # Clean up temp file if it still exists (indicates failure)
+            if tmp_created and os.path.exists(tmp_path):
+                try:
+                    os.remove(tmp_path)
+                except OSError:
+                    pass
 
     # Backup function copy the existing custom colour definition and settings files
     def backup(self):
         try:
-            if not os.path.isfile(SETTINGS_CFG):
-                messagebox.showerror("Backup Error", "settings.cfg not found in application directory.")
-                return
-
-            # Read FileLocation from cfg
-            sourceDir = None
-            with open(SETTINGS_CFG, "r", encoding="utf-8") as f:
-                for line in f:
-                    if line.startswith("FileLocation:"):
-                        sourceDir = line.split("FileLocation:", 1)[1].strip()
-                        break
-
-            if not sourceDir or not os.path.isdir(sourceDir):
+            # Read FileLocation from cfg, confirm files from settings.cfg exist
+            sourceDir = readFileLocationFromConfig()
+            if not sourceDir:
                 messagebox.showerror("Backup Error", "Invalid or missing FileLocation in settings.cfg.")
                 return
 
@@ -921,7 +907,7 @@ class FormFactoryApp(tk.Tk):
                 )
             else:
                 messagebox.showwarning(
-                    "Backup",
+                    "Backup Warning",
                     "No files were backed up (files missing?)."
                 )
 
