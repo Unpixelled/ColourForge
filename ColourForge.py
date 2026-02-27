@@ -41,6 +41,10 @@ CHECKBOX_UNCHECKED_VALUE = "1.0"
 # Size of dropdown box
 DROPDOWN_WIDTH = 50
 
+# Colour bar dimensions (next to picker buttons)
+COLOUR_BAR_WIDTH = 80  # Width in pixels
+COLOUR_BAR_HEIGHT = 20  # Height in pixels
+
 ############################################################
 # Unpixelled's ColourForge
 ############################################################
@@ -62,21 +66,15 @@ DROPDOWN_WIDTH = 50
 # - Multiple OS support
 # - Dictionary to support multiple languages
 
-# Check OS - currently only windows supported
-def checkOS():
-    if os.name == "nt":
-        return True
-    else:
-        print("This application currently only supports Windows.")
+# Check System requirements - OS and Python version
+def checkSystemRequirements():
+    if os.name != "nt":
+        print("This application currently only supports Windows currently.")
         return False
-    
-# Check Python version
-def checkPython():
-    if sys.version_info >= (3, 9):
-        return True
-    else:
+    if sys.version_info < (3, 9):
         print("This application requires Python 3.9 or higher.")
         return False
+    return True
 
 # Initial Logo Splash Screen
 def splashLogoAtStart(image_path: str, fade_duration: float):
@@ -225,6 +223,9 @@ COLOUR_LIST = [
     {"id": 21, "name": "magenta", "rgb": {"r": 105, "g": 3, "b": 47}},
 ]
 
+# RGB Field Suffixes
+RGB_SUFFIXES = ("rvalue", "gvalue", "bvalue")
+
 # Finds the closest colour in COLOUR_LIST to the given RGB value
 def closestColour(rgb):
     input_lab = rgbToLab(rgb)
@@ -283,6 +284,8 @@ class FormFactoryApp(tk.Tk):
 
         self.fields = []
         self.code_block = ""
+        self.colour_bars = {}  # Maps picker key to (canvas, var) for colour preview bars
+        self._updating_from_picker = False
 
         self.createWidgets()
         self.loadTemplates()
@@ -424,6 +427,12 @@ class FormFactoryApp(tk.Tk):
                 text="Pick",
                 command=lambda v=var, k=key: self.pickColour(v, k)
             )
+            # Create colour preview bar next to picker
+            colour_bar = tk.Canvas(frame, width=COLOUR_BAR_WIDTH, height=COLOUR_BAR_HEIGHT, bg="#ffffff", highlightthickness=1, highlightbackground="#888888")
+            colour_bar.pack(side="left", padx=5)
+            self.colour_bars[key] = (colour_bar, var)
+            # Add trace to update colour bar when var changes
+            var.trace_add("write", lambda *_, k=key: self.updateColourBar(k))
         elif ftype == "desc":
             var = None
             widget = ttk.Label(frame, text=label)
@@ -451,50 +460,51 @@ class FormFactoryApp(tk.Tk):
                     v.set(str(value))
         self._updating_from_picker = False
 
+        # Update the colour bar
+        self.updateColourBar(key)
+
+    # Updates the colour bar canvas for a given picker key
+    def updateColourBar(self, pickerKey):
+        if pickerKey not in self.colour_bars:
+            return
+        colour_bar, var = self.colour_bars[pickerKey]
+        hex_colour = var.get()
+        # Validate hex format
+        if hex_colour.startswith("#") and len(hex_colour) == 7:
+            try:
+                colour_bar.configure(bg=hex_colour)
+            except tk.TclError:
+                messagebox.showerror("Colour update to colour bar failed. Invalid colour value.")
+                colour_bar.configure(bg="#ff00ff")  # Magenta = error indicator
+                pass  # Invalid colour, ignore
+
     # Updates the picker hex value when RGB number fields are manually changed
-    def onRgbFieldChanged(self, changedKey):
-        # Avoid feedback loop when picker is updating RGB fields
+    def onRgbFieldChanged(self, _changedKey):
         if getattr(self, '_updating_from_picker', False):
             return
 
-        # Determine the colour prefix based on which RGB field was changed
-        if changedKey.endswith("rvalue"):
-            prefix = changedKey[:-6]
-        elif changedKey.endswith("gvalue"):
-            prefix = changedKey[:-6]
-        elif changedKey.endswith("bvalue"):
-            prefix = changedKey[:-6]
-        else:
+        prefix = None
+        for suffix in RGB_SUFFIXES:
+            if _changedKey.endswith(suffix):
+                prefix = _changedKey[:-len(suffix)]
+                break
+        if not prefix:
             return
 
-        # Find the R, G, B field values
-        r_val, g_val, b_val = 0, 0, 0
-        for k, ftype, var, _ in self.fields:
-            if k == f"{prefix}rvalue":
-                try:
-                    r_val = int(var.get())
-                    r_val = max(0, min(255, r_val))
-                except (ValueError, tk.TclError):
-                    r_val = 0
-            elif k == f"{prefix}gvalue":
-                try:
-                    g_val = int(var.get())
-                    g_val = max(0, min(255, g_val))
-                except (ValueError, tk.TclError):
-                    g_val = 0
-            elif k == f"{prefix}bvalue":
-                try:
-                    b_val = int(var.get())
-                    b_val = max(0, min(255, b_val))
-                except (ValueError, tk.TclError):
-                    b_val = 0
+        fieldMap = {k: v for k, _, v, _ in self.fields}
+        
+        rgb = []
+        for suffix in RGB_SUFFIXES:
+            key = f"{prefix}{suffix}"
+            try:
+                val = int(fieldMap.get(key, tk.StringVar()).get())
+            except (ValueError, tk.TclError):
+                val = 0
+            rgb.append(val)  # Let rgbToHex handle clamping
 
-        # Find and update the associated picker
-        picker_key = f"{prefix}picker"
-        for k, ftype, var, _ in self.fields:
-            if k == picker_key and ftype == "picker":
-                var.set(rgbToHex(r_val, g_val, b_val))
-                break
+        pickerKey = f"{prefix}picker"
+        if pickerKey in fieldMap:
+            fieldMap[pickerKey].set(rgbToHex(*rgb))
 
     ############################################################
     # Output Generation Logic
@@ -932,11 +942,8 @@ class FormFactoryApp(tk.Tk):
 ############################################################
 
 if __name__ == "__main__":
-    #Check OS
-    if not checkOS():
-        sys.exit(1)
-
-    if not checkPython():
+    #Check System Requirements like OS and Python version
+    if not checkSystemRequirements():
         sys.exit(1)
 
     #Show the splash screen logo
