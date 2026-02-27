@@ -1,7 +1,7 @@
 # Unpixelled's ColourForge
 A Custom Colour Maker for Bricklink's Stud.io
 
-V0.1.5
+V0.1.6
 
 ## Features
 
@@ -41,7 +41,6 @@ This is still being tested as it massively inflates the file size.
 - Gradient field support and control in templates
 - Custom group export/inclusion
 - Language support (potential collaboration needed)
-- Display colours selected somehow in interface next to RGB fields
 - Recommended values in templates or autofill
 - Improve accuracy of estimated colour category
 - Render a brick if possible as changes are made (the dream)

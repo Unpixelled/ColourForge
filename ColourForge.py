@@ -10,7 +10,7 @@ import tkinter as tk
 from tkinter import ttk, filedialog, messagebox, colorchooser
 
 #Version
-VERSION = "0.1.5"
+VERSION = "0.1.6"
 
 # Current base directory
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -688,8 +688,11 @@ class FormFactoryApp(tk.Tk):
                     messagebox.showerror("Input Error", f"Colour Name '{val}' contains a reserved keyword in Stud.io. Please choose a different name.")
                     return False
             
-            # Confirm the colour ID is an integer within range
+            # Confirm the colour ID is an integer within range of 0-100,000,000 (Stud.io's colour ID limit)
             if key == "colourid":
+                if not val.isdigit():
+                    messagebox.showerror("Input Error", f"Colour ID '{val}' is not a valid Number!")
+                    return False
                 val = int(var.get())
                 if val > 100000000 or val < 0:
                     messagebox.showerror("Input Error", f"Colour ID '{val}' is out of range. This will not appear in Stud.io's colour list.")
