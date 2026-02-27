@@ -803,13 +803,13 @@ class FormFactoryApp(tk.Tk):
             size = os.path.getsize(settingsPath)
             readSize = min(size, TAIL_READ)
 
-            with open(settingsPath, "readBinary") as fileRead:
+            with open(settingsPath, "rb") as fr:
                 # Seek to the tail area and read it
                 if size > readSize:
-                    fileRead.seek(-readSize, os.SEEK_END)
+                    fr.seek(-readSize, os.SEEK_END)
                 else:
-                    fileRead.seek(0)
-                tailBytes = fileRead.read()
+                    fr.seek(0)
+                tailBytes = fr.read()
             try:
                 tail = tailBytes.decode("utf-8")
             except Exception:
@@ -838,29 +838,29 @@ class FormFactoryApp(tk.Tk):
 
             # Stream-copy: write a temp file by copying bytes up to absPosInFile,
             # then write the settings text (utf-8), then copy the remainder
-            with open(settingsPath, "readBinary") as fileRead, open(tempPath, "writeBinary") as fileWrite:
+            with open(settingsPath, "rb") as fr, open(tempPath, "wb") as fw:
                 tempCreated = True
 
                 # Copy up to absPosInFile
                 remaining = absPosInFile
                 while remaining > 0:
                     toRead = CHUNK_SIZE if remaining >= CHUNK_SIZE else remaining
-                    data = fileRead.read(toRead)
+                    data = fr.read(toRead)
                     if not data:
                         break
-                    fileWrite.write(data)
+                    fw.write(data)
                     remaining -= len(data)
 
                 # Ensure there's a newline before insertion if not present
                 # Check last byte written in fileWrite (seek)
-                fileWrite.flush()
+                fw.flush()
 
                 # Write settings text as utf-8
-                fileWrite.write(settingsToWrite.encode("utf-8"))
+                fw.write(settingsToWrite.encode("utf-8"))
 
                 # Seek original to absPosInFile and copy rest
-                fileRead.seek(absPosInFile)
-                shutil.copyfileobj(fileRead, fileWrite)
+                fr.seek(absPosInFile)
+                shutil.copyfileobj(fr, fw)
 
             # Replace original file atomically
             os.replace(tempPath, settingsPath)
