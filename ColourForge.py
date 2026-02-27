@@ -81,7 +81,7 @@ def checkSystemRequirements():
     return True
 
 # Initial Logo Splash Screen
-def splashLogoAtStart(image_path: str, fade_duration: float):
+def splashLogoAtStart(imagePath: str, fadeDuration: float):
     root = tk.Tk()
     root.withdraw()
 
@@ -91,7 +91,7 @@ def splashLogoAtStart(image_path: str, fade_duration: float):
 
     # Load image ##TODO if no image, just skip splash instead of exiting
     try:
-        img = tk.PhotoImage(file=image_path)
+        img = tk.PhotoImage(file=imagePath)
     except Exception as e:
         splash.destroy()
         root.destroy()
@@ -115,7 +115,7 @@ def splashLogoAtStart(image_path: str, fade_duration: float):
 
     # Fade logic
     steps = 30
-    delay = fade_duration / steps
+    delay = fadeDuration / steps
     alpha = 1.0
     delta = alpha / steps
 
@@ -238,10 +238,10 @@ RGB_SUFFIXES = ("rvalue", "gvalue", "bvalue")
 
 # Finds the closest colour in COLOUR_LIST to the given RGB value
 def closestColour(rgb):
-    input_lab = rgbToLab(rgb)
+    inputLAB = rgbToLab(rgb)
     best, dist = None, float("inf")
     for c in COLOUR_LIST:
-        d = deltaECalculation(input_lab, rgbToLab(c["rgb"]))
+        d = deltaECalculation(inputLAB, rgbToLab(c["rgb"]))
         if d < dist:
             best, dist = c["id"], d
     return best
@@ -293,9 +293,9 @@ class FormFactoryApp(tk.Tk):
         self.geometry("900x700")
 
         self.fields = []
-        self.code_block = ""
-        self.colour_bars = {}  # Maps picker key to (canvas, var) for colour preview bars
-        self._updating_from_picker = False
+        self.codeBlock = ""
+        self.colourBars = {}  # Maps picker key to (canvas, var) for colour preview bars
+        self.updatingFromPicker = False
 
         self.createWidgets()
         self.loadTemplates()
@@ -305,10 +305,10 @@ class FormFactoryApp(tk.Tk):
         top.pack(fill="x", padx=10, pady=10)
 
         ttk.Label(top, text="Template:").pack(side="left")
-        self.template_var = tk.StringVar()
-        self.template_combo = ttk.Combobox(top, textvariable=self.template_var, state="readonly", width=DROPDOWN_WIDTH)
-        self.template_combo.pack(side="left", padx=5)
-        self.template_combo.bind("<<ComboboxSelected>>", self.loadTemplate)
+        self.templateVar = tk.StringVar()
+        self.templateCombo = ttk.Combobox(top, textvariable=self.templateVar, state="readonly", width=DROPDOWN_WIDTH)
+        self.templateCombo.pack(side="left", padx=5)
+        self.templateCombo.bind("<<ComboboxSelected>>", self.loadTemplate)
 
         # Scrollable form area
         container = ttk.Frame(self)
@@ -316,14 +316,14 @@ class FormFactoryApp(tk.Tk):
 
         canvas = tk.Canvas(container)
         scrollbar = ttk.Scrollbar(container, orient="vertical", command=canvas.yview)
-        self.form_frame = ttk.Frame(canvas)
+        self.formFrame = ttk.Frame(canvas)
 
-        self.form_frame.bind(
+        self.formFrame.bind(
             "<Configure>",
             lambda e: canvas.configure(scrollregion=canvas.bbox("all"))
         )
 
-        canvas.create_window((0, 0), window=self.form_frame, anchor="nw")
+        canvas.create_window((0, 0), window=self.formFrame, anchor="nw")
         canvas.configure(yscrollcommand=scrollbar.set)
 
         canvas.pack(side="left", fill="both", expand=True)
@@ -347,19 +347,19 @@ class FormFactoryApp(tk.Tk):
         if not os.path.isdir(TEMPLATES_DIR):
             os.makedirs(TEMPLATES_DIR)
         files = [f for f in os.listdir(TEMPLATES_DIR) if f.endswith(".txt")]
-        self.template_combo["values"] = files
+        self.templateCombo["values"] = files
 
     # Clears all form fields and resets the code block
     def clearForm(self):
-        for w in self.form_frame.winfo_children():
+        for w in self.formFrame.winfo_children():
             w.destroy()
         self.fields.clear()
-        self.code_block = ""
+        self.codeBlock = ""
 
     # Loads the selected template and parses it to build the form
     def loadTemplate(self, *_):
         self.clearForm()
-        path = os.path.join(TEMPLATES_DIR, self.template_var.get())
+        path = os.path.join(TEMPLATES_DIR, self.templateVar.get())
         with open(path, "r", encoding="utf-8") as f:
             self.parseTemplate(f.read())
 
@@ -367,8 +367,8 @@ class FormFactoryApp(tk.Tk):
     def parseTemplate(self, content):
         lines = content.splitlines()
         section = None
-        parsing_code = False
-        code_lines = []
+        parsingCode = False
+        codeLines = []
 
         for line in lines:
             raw = line
@@ -377,20 +377,20 @@ class FormFactoryApp(tk.Tk):
                 continue
 
             if line == END_OF_FORM:
-                parsing_code = True
+                parsingCode = True
                 continue
 
-            if parsing_code:
+            if parsingCode:
                 if line.startswith("code"):
                     continue
                 # Preserve original leading whitespace for code lines
-                code_lines.append(raw)
+                codeLines.append(raw)
                 continue
 
             if line.startswith("section"):
                 parts = line.split(None, 1)
                 title = parts[1].strip() if len(parts) > 1 else ""
-                section = ttk.LabelFrame(self.form_frame, text=title)
+                section = ttk.LabelFrame(self.formFrame, text=title)
                 section.pack(fill="x", pady=5)
                 continue
 
@@ -398,7 +398,7 @@ class FormFactoryApp(tk.Tk):
             label = " ".join(label)
             self.createField(section, t, label)
 
-        self.code_block = "\n".join(code_lines)
+        self.codeBlock = "\n".join(codeLines)
 
     # Dynamically creates a form field of the given type and label
     def createField(self, parent, ftype, label):
@@ -438,9 +438,9 @@ class FormFactoryApp(tk.Tk):
                 command=lambda v=var, k=key: self.pickColour(v, k)
             )
             # Create colour preview bar next to picker
-            colour_bar = tk.Canvas(frame, width=COLOUR_BAR_WIDTH, height=COLOUR_BAR_HEIGHT, bg="#ffffff", highlightthickness=1, highlightbackground="#888888")
-            colour_bar.pack(side="left", padx=5)
-            self.colour_bars[key] = (colour_bar, var)
+            colourBar = tk.Canvas(frame, width=COLOUR_BAR_WIDTH, height=COLOUR_BAR_HEIGHT, bg="#ffffff", highlightthickness=1, highlightbackground="#888888")
+            colourBar.pack(side="left", padx=5)
+            self.colourBars[key] = (colourBar, var)
             # Add trace to update colour bar when var changes
             var.trace_add("write", lambda *_, k=key: self.updateColourBar(k))
         elif ftype == "desc":
@@ -463,44 +463,45 @@ class FormFactoryApp(tk.Tk):
         var.set(rgbToHex(r, g, b))
 
         # Temporarily disable RGB field traces to avoid feedback loop
-        self._updating_from_picker = True
+        self.updatingFromPicker = True
         for suffix, value in zip(("rvalue", "gvalue", "bvalue"), (r, g, b)):
             for k, _, v, _ in self.fields:
                 if k == f"{key.replace('colourpicker','colour')}{suffix}":
                     v.set(str(value))
-        self._updating_from_picker = False
+        self.updatingFromPicker = False
 
         # Update the colour bar
         self.updateColourBar(key)
 
     # Updates the colour bar canvas for a given picker key
     def updateColourBar(self, pickerKey):
-        if pickerKey not in self.colour_bars:
+        if pickerKey not in self.colourBars:
             return
-        colour_bar, var = self.colour_bars[pickerKey]
+        colourBar, var = self.colourBars[pickerKey]
         hex_colour = var.get()
         # Validate hex format
         if hex_colour.startswith("#") and len(hex_colour) == 7:
             try:
-                colour_bar.configure(bg=hex_colour)
+                colourBar.configure(bg=hex_colour)
             except tk.TclError:
                 messagebox.showerror("Colour update to colour bar failed. Invalid colour value.")
-                colour_bar.configure(bg="#ff00ff")  # Magenta = error indicator
+                colourBar.configure(bg="#ff00ff")  # Magenta = error indicator
                 pass  # Invalid colour, ignore
 
     # Updates the picker hex value when RGB number fields are manually changed
-    def onRgbFieldChanged(self, _changedKey):
-        if getattr(self, '_updating_from_picker', False):
+    def onRgbFieldChanged(self, changedKey):
+        if getattr(self, 'updatingFromPicker', False):
             return
 
         prefix = None
         for suffix in RGB_SUFFIXES:
-            if _changedKey.endswith(suffix):
-                prefix = _changedKey[:-len(suffix)]
+            if changedKey.endswith(suffix):
+                prefix = changedKey[:-len(suffix)]
                 break
         if not prefix:
             return
 
+        # Create a mapping of keys to variables for easy lookup through pickers
         fieldMap = {k: v for k, _, v, _ in self.fields}
         
         rgb = []
@@ -526,17 +527,17 @@ class FormFactoryApp(tk.Tk):
         # Each picker fills its own indexed RGB placeholders, supporting multiple colours.
         # Number, text, and checkbox fields are filled sequentially.
 
-        out = self.code_block
+        out = self.codeBlock
 
         # Collect all values by type in order, but keep pickers and numbers separate
-        text_values = []
-        number_values = []
-        checkbox_values = []
+        textValues = []
+        numberValues = []
+        checkboxValues = []
         pickers = []  # Each picker is a dict with r, g, b
         colourname = None
         colourid = None
         lightType = None
-        rgb_fields = {}
+        rgbFields = {}
 
         if not self.validateFields():
             return None
@@ -551,7 +552,7 @@ class FormFactoryApp(tk.Tk):
             elif key == "lightType":
                 lightType = val
             elif ftype == "text":
-                text_values.append(val)
+                textValues.append(val)
             elif ftype == "number":
                 # Exclude number fields that are part of RGB (rvalue, gvalue, bvalue)
                 if not (key.endswith("rvalue") or key.endswith("gvalue") or key.endswith("bvalue")):
@@ -561,12 +562,12 @@ class FormFactoryApp(tk.Tk):
                         return None
                     try:
                         float(val)
-                        number_values.append(val)
+                        numberValues.append(val)
                     except Exception:
                         messagebox.showerror("Input Error", f"Invalid number in field '{label}'. Please enter a numeric value.")
                         return None
             elif ftype == "checkbox":
-                checkbox_values.append(CHECKBOX_CHECKED_VALUE if var.get() else CHECKBOX_UNCHECKED_VALUE)
+                checkboxValues.append(CHECKBOX_CHECKED_VALUE if var.get() else CHECKBOX_UNCHECKED_VALUE)
             elif ftype == "picker":
                 hex_val = val
                 if hex_val.startswith("#") and len(hex_val) == 7:
@@ -581,7 +582,7 @@ class FormFactoryApp(tk.Tk):
                     r_val = int(val)
                     if not (0 <= r_val <= 255):
                         raise ValueError("RGB value out of range")
-                    rgb_fields.setdefault(key[:-6], {})["r"] = r_val
+                    rgbFields.setdefault(key[:-6], {})["r"] = r_val
                 except Exception:
                     messagebox.showerror("Input Error", f"Invalid R value in field '{label}'. Please enter an integer between 0 and 255.")
                     return None
@@ -590,7 +591,7 @@ class FormFactoryApp(tk.Tk):
                     g_val = int(val)
                     if not (0 <= g_val <= 255):
                         raise ValueError("RGB value out of range")
-                    rgb_fields.setdefault(key[:-6], {})["g"] = g_val
+                    rgbFields.setdefault(key[:-6], {})["g"] = g_val
                 except Exception:
                     messagebox.showerror("Input Error", f"Invalid G value in field '{label}'. Please enter an integer between 0 and 255.")
                     return None
@@ -599,7 +600,7 @@ class FormFactoryApp(tk.Tk):
                     b_val = int(val)
                     if not (0 <= b_val <= 255):
                         raise ValueError("RGB value out of range")
-                    rgb_fields.setdefault(key[:-6], {})["b"] = b_val
+                    rgbFields.setdefault(key[:-6], {})["b"] = b_val
                 except Exception:
                     messagebox.showerror("Input Error", f"Invalid B value in field '{label}'. Please enter an integer between 0 and 255.")
                     return None
@@ -619,9 +620,9 @@ class FormFactoryApp(tk.Tk):
 
             return template
 
-        out = replaceSequentially(out, "!number!", number_values)
-        out = replaceSequentially(out, "!text!", text_values)
-        out = replaceSequentially(out, "!checkbox!", checkbox_values)
+        out = replaceSequentially(out, "!number!", numberValues)
+        out = replaceSequentially(out, "!text!", textValues)
+        out = replaceSequentially(out, "!checkbox!", checkboxValues)
 
         # Only the first picker fills !Hex! and !ColourCategory!; all pickers fill their RGB value placeholders
         if pickers:
@@ -642,9 +643,9 @@ class FormFactoryApp(tk.Tk):
             out = re.sub(r"!Hex\d+!", "", out)
             out = re.sub(r"!ColourCategory\d+!", "", out)
 
-        elif rgb_fields:
+        elif rgbFields:
             # Fallback: legacy behaviour for rvalue/gvalue/bvalue fields from JS version
-            for idx, (prefix, rgb) in enumerate(rgb_fields.items()):
+            for idx, (prefix, rgb) in enumerate(rgbFields.items()):
                 if all(k in rgb for k in ("r", "g", "b")):
                     if idx == 0:
                         out = out.replace("!ColourRValue!", str(rgb["r"] / 255), 1)
@@ -674,6 +675,10 @@ class FormFactoryApp(tk.Tk):
     
     # Confirm fields are valid before output generation
     def validateFields(self):
+        # First check fields exist and the page isn't empty
+        if not self.fields:
+            messagebox.showerror("Input Error", "No fields found in the form. Please select a valid template.")
+            return False
         # Loop through fields to validate, one loop multiple checks for efficiency
         for key, ftype, var, label in self.fields:
             # First check that no fields are empty
@@ -767,10 +772,10 @@ class FormFactoryApp(tk.Tk):
             return
 
         # Write definition to file, making sure to write at the end of the file on a new line
-        def_path = os.path.join(sourceDir, DEFINITION_FILE)
+        defPath = os.path.join(sourceDir, DEFINITION_FILE)
         try:
-            with open(def_path, "a", encoding="utf-8") as f:
-                if os.path.getsize(def_path) > 0:
+            with open(defPath, "a", encoding="utf-8") as f:
+                if os.path.getsize(defPath) > 0:
                     f.write("\n")
                 f.write(definition)
             messagebox.showinfo("Definition Write Complete", f"Definition written to {DEFINITION_FILE}, proceed to settings export.")
@@ -788,78 +793,78 @@ class FormFactoryApp(tk.Tk):
             return
 
         # Write settings into the settings file, inserting them before SETTINGS_ENDING
-        set_path = os.path.join(sourceDir, SETTINGS_FILE)
-        tmp_path = set_path + ".tmp"
-        tmp_created = False
+        settingsPath = os.path.join(sourceDir, SETTINGS_FILE)
+        tempPath = settingsPath + ".tmp"
+        tempCreated = False
 
         try:
             # Read only the tail of the file to locate SETTINGS_ENDING so we don't 
             # load the entire multi-MB settings file into memory (at least mine is 2mb+)
-            size = os.path.getsize(set_path)
-            read_size = min(size, TAIL_READ)
+            size = os.path.getsize(settingsPath)
+            readSize = min(size, TAIL_READ)
 
-            with open(set_path, "rb") as fr:
+            with open(settingsPath, "readBinary") as fileRead:
                 # Seek to the tail area and read it
-                if size > read_size:
-                    fr.seek(-read_size, os.SEEK_END)
+                if size > readSize:
+                    fileRead.seek(-readSize, os.SEEK_END)
                 else:
-                    fr.seek(0)
-                tail_bytes = fr.read()
+                    fileRead.seek(0)
+                tailBytes = fileRead.read()
             try:
-                tail = tail_bytes.decode("utf-8")
+                tail = tailBytes.decode("utf-8")
             except Exception:
                 # Fallback decode permissively
-                tail = tail_bytes.decode("utf-8", errors="replace")
+                tail = tailBytes.decode("utf-8", errors="replace")
 
-            idx_in_tail = tail.find(SETTINGS_ENDING)
-            if idx_in_tail == -1:
+            posInTail = tail.find(SETTINGS_ENDING)
+            if posInTail == -1:
                 # If the ending marker is not present, consider the settings file invalid and abort
                 messagebox.showerror("Settings Write Error", f"{SETTINGS_FILE} is missing expected ending marker {SETTINGS_ENDING}; file appears invalid.")
                 return
 
             # Compute absolute byte position of the marker in the file
-            if size > read_size:
-                idx_abs = size - read_size + idx_in_tail
+            if size > readSize:
+                absPosInFile = size - readSize + posInTail
             else:
-                idx_abs = idx_in_tail
+                absPosInFile = posInTail
 
             # Prepare text to insert (ensure newline at end)
-            settings_to_write = settings
-            if not settings_to_write.endswith("\n"):
-                settings_to_write += "\n"
+            settingsToWrite = settings
+            if not settingsToWrite.endswith("\n"):
+                settingsToWrite += "\n"
 
-            # Add a little comment to the end of the inserted settings
-            settings_to_write += f"<!-- Added by Unpixelled's ColourForge on {time.strftime('%Y-%m-%d %H:%M:%S')} -->\n\n"
+            # Add a little comment to the end of the inserted settings :)
+            settingsToWrite += f"<!-- Added by Unpixelled's ColourForge on {time.strftime('%Y-%m-%d %H:%M:%S')} -->\n\n"
 
-            # Stream-copy: write a temp file by copying bytes up to idx_abs,
+            # Stream-copy: write a temp file by copying bytes up to absPosInFile,
             # then write the settings text (utf-8), then copy the remainder
-            with open(set_path, "rb") as fr, open(tmp_path, "wb") as fw:
-                tmp_created = True
+            with open(settingsPath, "readBinary") as fileRead, open(tempPath, "writeBinary") as fileWrite:
+                tempCreated = True
 
-                # Copy up to idx_abs
-                remaining = idx_abs
+                # Copy up to absPosInFile
+                remaining = absPosInFile
                 while remaining > 0:
-                    to_read = CHUNK_SIZE if remaining >= CHUNK_SIZE else remaining
-                    data = fr.read(to_read)
+                    toRead = CHUNK_SIZE if remaining >= CHUNK_SIZE else remaining
+                    data = fileRead.read(toRead)
                     if not data:
                         break
-                    fw.write(data)
+                    fileWrite.write(data)
                     remaining -= len(data)
 
                 # Ensure there's a newline before insertion if not present
-                # Check last byte written in fw (seek)
-                fw.flush()
+                # Check last byte written in fileWrite (seek)
+                fileWrite.flush()
 
                 # Write settings text as utf-8
-                fw.write(settings_to_write.encode("utf-8"))
+                fileWrite.write(settingsToWrite.encode("utf-8"))
 
-                # Seek original to idx_abs and copy rest
-                fr.seek(idx_abs)
-                shutil.copyfileobj(fr, fw)
+                # Seek original to absPosInFile and copy rest
+                fileRead.seek(absPosInFile)
+                shutil.copyfileobj(fileRead, fileWrite)
 
             # Replace original file atomically
-            os.replace(tmp_path, set_path)
-            tmp_created = False  # Successfully replaced, no cleanup needed
+            os.replace(tempPath, settingsPath)
+            tempCreated = False  # Successfully replaced, no cleanup needed
 
             messagebox.showinfo("Settings Write Complete", f"Settings written to {SETTINGS_FILE}, colour write complete.")
 
@@ -868,9 +873,9 @@ class FormFactoryApp(tk.Tk):
 
         finally:
             # Clean up temp file if it still exists (indicates failure)
-            if tmp_created and os.path.exists(tmp_path):
+            if tempCreated and os.path.exists(tempPath):
                 try:
-                    os.remove(tmp_path)
+                    os.remove(tempPath)
                 except OSError:
                     pass
 
@@ -883,22 +888,22 @@ class FormFactoryApp(tk.Tk):
                 messagebox.showerror("Backup Error", "Invalid or missing FileLocation in settings.cfg.")
                 return
 
-            backup_dir = os.path.join(BASE_DIR, "backup")
-            os.makedirs(backup_dir, exist_ok=True)
+            backupDirectory = os.path.join(BASE_DIR, "backup")
+            os.makedirs(backupDirectory, exist_ok=True)
 
             timestamp = time.strftime("%y%m%d_%H%M")
-            files_to_backup = [DEFINITION_FILE, SETTINGS_FILE]
+            filesToBackup = [DEFINITION_FILE, SETTINGS_FILE]
 
             copied = []
 
-            for filename in files_to_backup:
+            for filename in filesToBackup:
                 src = os.path.join(sourceDir, filename)
                 if not os.path.isfile(src):
                     continue
 
                 name, ext = os.path.splitext(filename)
                 dst_name = f"{name}_{timestamp}{ext}"
-                dst = os.path.join(backup_dir, dst_name)
+                dst = os.path.join(backupDirectory, dst_name)
 
                 shutil.copy2(src, dst)
                 copied.append(dst_name)
