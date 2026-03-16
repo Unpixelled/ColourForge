@@ -45,3 +45,4 @@ This is still being tested as it massively inflates the file size.
 - Improve accuracy of estimated colour category
 - Render a brick if possible as changes are made (the dream)
 - Texture support
+- Save/Load input field values to work on them/fine tune them later

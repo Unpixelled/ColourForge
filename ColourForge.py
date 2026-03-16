@@ -549,7 +549,7 @@ class FormFactoryApp(tk.Tk):
                 colourname = val
             elif key == "colourid":
                 colourid = val
-            elif key == "lightType":
+            elif key == "lighttype":
                 lightType = val
             elif ftype == "text":
                 textValues.append(val)
