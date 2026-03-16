@@ -427,7 +427,7 @@ class FormFactoryApp(tk.Tk):
                 frame,
                 textvariable=var,
                 state="readonly",
-                values=["Fresnel","Fac"]
+                values=["Fresnel","Facing"]
             )
             widget.current(0)
         elif ftype == "picker":

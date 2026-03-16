@@ -7,6 +7,7 @@ V0.1.6
 - If no template selected save/copy/export buttons do nothing
 - Added CamoDouble and CamoTriple templates from Unpixelled and shushudancer
 - Added a changelog ( this file! :D )
+- Fixed Facing light option
 
 V0.1.5
 - Added callback so if a user does not use the picker, only numerical fields, the RGB will update to use the numerical fields
