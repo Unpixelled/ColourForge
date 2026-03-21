@@ -1,0 +1,35 @@
+section Colour Description
+text Colour Name
+number Colour ID
+checkbox Transparent Colour (Editor Only)
+
+section Colour
+picker ColourPicker
+desc Select a colour with the picker above.
+number Colour R value
+number Colour G value
+number Colour B value
+
+end of form
+
+code
+
+<<< Colour Definition >>>
+!ColourID!	!ColourID!	!ColourID!	!ColourID!	Antique !ColourName!	Antique !ColourName!	Antique !ColourName!	Antique !ColourName!	!Hex!	!checkbox!	Chrome Colors	!ColourCategory!	to_lego			Chrome Colors
+
+<<< Colour Settings >>>
+
+<material name="CHROME-ANTIQUE_!ColourNameSetting!" displacement_method="bump" heterogeneous_volume="False"
+	use_local_tuning="False" use_mis="True" use_transparent_shadow="True"
+	volume_interpolation_method="linear" volume_sampling_method="multiple_importance">
+	<shader>
+		<color name="RGB" value="!ColourRValue1! !ColourGValue1! !ColourBValue1!" />
+		<group group_name="CHROME-ANTIQUE-GROUP" name="CHROME-ANTIQUE-GROUP">
+			<input name="BaseColor" type="color" />
+			<output name="BSDF" type="closure" />
+		</group>
+		<connect from_node="RGB" from_socket="Color" to_node="CHROME-ANTIQUE-GROUP" to_socket="BaseColor" />
+		<connect from_node="CHROME-ANTIQUE-GROUP" from_socket="BSDF" to_node="Output" to_socket="Surface" />
+	</shader>
+</material>
+<!-- Template By Shushudancer -->

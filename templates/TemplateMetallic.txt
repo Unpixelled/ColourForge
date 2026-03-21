@@ -1,0 +1,34 @@
+section Colour Description
+text Colour Name
+number Colour ID
+checkbox Transparent Colour (Editor Only)
+
+section Colour
+picker ColourPicker
+desc Select a colour with the picker above.
+number Colour R value
+number Colour G value
+number Colour B value
+
+end of form
+
+code
+
+<<< Colour Definition >>>
+!ColourID!	!ColourID!	!ColourID!	!ColourID!	Metallic !ColourName!	Metallic !ColourName!	Metallic !ColourName!	Metallic !ColourName!	!Hex!	!checkbox!	Metallic Colors	!ColourCategory!	to_lego			Metallic Colors
+
+<<< Colour Settings >>>
+<material displacement_method="bump" heterogeneous_volume="False" name="METAL-!ColourNameSetting!" use_local_tuning="False" use_mis="True" use_transparent_shadow="True" volume_interpolation_method="linear" volume_sampling_method="multiple_importance">
+	<shader>
+		<color name="RGB" value="!ColourRValue! !ColourGValue! !ColourBValue!" />
+		<group group_name="METAL-GROUP" name="METAL-GROUP">
+			<input name="BaseColor" type="color" />
+			<input name="Color" type="color" />
+			<output name="Shader" type="closure" />
+		</group>
+		<connect from_node="RGB" from_socket="Color" to_node="METAL-GROUP" to_socket="BaseColor" />
+		<connect from_node="RGB" from_socket="Color" to_node="METAL-GROUP" to_socket="Color" />
+		<connect from_node="METAL-GROUP" from_socket="Shader" to_node="Output" to_socket="Surface" />
+	</shader>
+</material>
+<!-- Template By Unpixelled -->

@@ -1,0 +1,56 @@
+V1.0.0
+- Release Version!
+
+V0.1.6
+- Fixed bug in Kintsugi Metal-Metal template
+- Added display bars next to pickers, synced to numerical inputs
+- Merged OS and Python check
+- Changed error box messages to clarify which method is calling them, settings, definition or backup
+- Improvements, optimizations under the hood
+- If no template selected save/copy/export buttons do nothing
+- Added CamoDouble and CamoTriple templates from Unpixelled and shushudancer
+- Added a changelog ( this file! :D )
+- Fixed Facing light option
+
+V0.1.5
+- Added callback so if a user does not use the picker, only numerical fields, the RGB will update to use the numerical fields
+- Added 5 Kintsugi Templates (to be tested, minor bug in Metal-Metal)
+- Minor tweak to descriptions in templates
+- Updated order and lanuage in improvements and planned features
+
+V0.1.4
+- Python version check
+- Relative pathing to splash image
+- Main application can be executed from other locations
+
+V0.1.3
+- Version string added to interface
+- Added desc (description) field for templates
+- Populated templates with descriptions
+
+V0.1.1-.2
+- Added scrollbar
+- Added reserved terms that cannot be used as names
+- Input sanitisation on RGB fields
+- ID field has a range check on it
+- Check for no empty fields before save/copy/export
+- Added lighttype as template field
+- Optimisation to not read entire settings and definition files
+- Roadmap of future features and known bugs
+- Message boxes wait for user prompts
+- Comment added to code output
+- Main bulk of templates added
+- Templates contributed by shushudancer
+
+V0.1.0 (Beta release)
+- Basic features of tool
+- Template system
+- Number, checkbox, text fields
+- ID and name fields
+- Copy to clipboard
+- Save as Field
+- Export to Stud.Io
+- Clear interface
+- Backup
+- Settings in cfg file
+- Splash image
