@@ -10,7 +10,7 @@ import tkinter as tk
 from tkinter import ttk, filedialog, messagebox, colorchooser
 
 #Version
-VERSION = "0.1.6"
+VERSION = "1.0.0"
 
 # Current base directory
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
