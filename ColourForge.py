@@ -350,6 +350,8 @@ class FormFactoryApp(tk.Tk):
         ttk.Button(btns, text="Save to File", command=self.saveCode).pack(side="left", padx=5)
         ttk.Button(btns, text="Export", command=self.exportCode).pack(side="left", padx=5)
         ttk.Button(btns, text="Clear", command=self.clearForm).pack(side="left", padx=5)
+        ttk.Button(btns, text="Save Form", command=self.saveForm).pack(side="left", padx=5)
+        ttk.Button(btns, text="Load Form", command=self.loadForm).pack(side="left", padx=5)
 
         # Right-aligned buttons
         ttk.Button(btns, text="Settings", command=self.openSettings).pack(side="right", padx=5)
@@ -935,6 +937,99 @@ class FormFactoryApp(tk.Tk):
         except Exception as e:
             messagebox.showerror("Backup Error", str(e))
 
+     # Saves the current form state (template + all field values) to a JSON file
+    def saveForm(self):
+        # If no template is selected, we can't save the form state as we won't know what fields to restore on load, so show an error
+        if not self.templateVar.get():
+            messagebox.showerror("Save Form Error", "No template selected. Please select a template before saving the form.")
+            return
+
+        # Determine default filename from colour name field
+        defaultName = "unnamed"
+        for key, ftype, var, label in self.fields:
+            if key == "colourname":
+                val = var.get().strip()
+                if val:
+                    defaultName = val
+                break
+
+        path = filedialog.asksaveasfilename(
+            defaultextension=".json",
+            initialfile=defaultName,
+            filetypes=[("ColourForge Save", "*.json"), ("All Files", "*.*")]
+        )
+        if not path:
+            return
+
+        data = {
+            "template": os.path.join(TEMPLATES_DIR, self.templateVar.get()),
+            "fields": [
+                {"key": key, "ftype": ftype, "label": label, "value": str(var.get())}
+                for key, ftype, var, label in self.fields
+            ]
+        }
+
+        try:
+            with open(path, "w", encoding="utf-8") as f:
+                json.dump(data, f, indent=2)
+            messagebox.showinfo("Save Form", f"Form saved successfully.")
+        except Exception as e:
+            messagebox.showerror("Save Form Error", str(e))
+
+    # Loads a saved form state from a JSON file, restoring the template and all field values
+    def loadForm(self):
+        path = filedialog.askopenfilename(
+            filetypes=[("ColourForge Save", "*.json"), ("All Files", "*.*")]
+        )
+        if not path:
+            return
+
+        try:
+            with open(path, "r", encoding="utf-8") as f:
+                data = json.load(f)
+        except Exception as e:
+            messagebox.showerror("Load Form Error", f"Could not read save file: {e}")
+            return
+
+        # Validate template availability
+        templatePath = data.get("template", "")
+        if not templatePath or not os.path.isfile(templatePath):
+            messagebox.showerror("Load Form Error", f"Template file is unavailable:\n{templatePath}")
+            return
+
+        # Load the template to rebuild the form
+        self.loadTemplate(templatePath)
+
+        # Build lookup from saved data
+        savedFields = {item["key"]: item["value"] for item in data.get("fields", [])}
+        savedLabels = {item["key"]: item["label"] for item in data.get("fields", [])}
+
+        # Check for field mismatches between save file and loaded template
+        currentKeys = {key for key, _, _, _ in self.fields}
+        savedKeys = set(savedFields.keys())
+        missingFromTemplate = savedKeys - currentKeys
+        missingFromSave = currentKeys - savedKeys
+
+        if missingFromTemplate or missingFromSave:
+            msg = "Field mismatch between save file and current template:\n"
+            if missingFromTemplate:
+                labels = [savedLabels.get(k, k) for k in missingFromTemplate]
+                msg += f"  In save but not in template: {', '.join(labels)}\n"
+            if missingFromSave:
+                extraLabels = [label for key, _, _, label in self.fields if key in missingFromSave]
+                msg += f"  In template but not in save: {', '.join(extraLabels)}\n"
+            messagebox.showerror("Load Form Error", msg)
+            return
+
+        # Populate all fields with saved values
+        for key, ftype, var, label in self.fields:
+            if key in savedFields:
+                val = savedFields[key]
+                if ftype == "checkbox":
+                    var.set(val == "True")
+                else:
+                    var.set(val)
+
     # Opens the settings file
     def openSettings(self):
         if not os.path.isfile(SETTINGS_CFG):
@@ -961,12 +1056,12 @@ class FormFactoryApp(tk.Tk):
 ############################################################
 
 if __name__ == "__main__":
-    #Check System Requirements like OS and Python version
+    # Check System Requirements like OS and Python version
     if not checkSystemRequirements():
         sys.exit(1)
 
-    #Show the splash screen logo
+    # Show the splash screen logo
     splashLogoAtStart(os.path.join(BASE_DIR, "splash.png"), FADE_DURATION)
 
-    #Begin main application
+    # Begin main application
     FormFactoryApp().mainloop()
