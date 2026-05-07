@@ -5,7 +5,10 @@ import re
 import sys
 import time
 import math
+import json
 import shutil
+import platform
+import subprocess
 import tkinter as tk
 from tkinter import ttk, filedialog, messagebox, colorchooser
 
@@ -72,12 +75,22 @@ TAIL_READ = 16384  # Read last 16KB of file to check for existing entries withou
 
 # Check System requirements - OS and Python version
 def checkSystemRequirements():
-    if os.name != "nt":
-        print("This application currently only supports Windows currently.")
-        return False
     if sys.version_info < (3, 9):
         print("This application requires Python 3.9 or higher.")
         return False
+    
+    currentSystem = platform.system()
+    if currentSystem not in {"Windows", "Darwin", "Linux"}:
+        print(f"Unsupported operating system: {currentSystem}")
+        return False
+
+    # On Linux, a display session is required for the GUI
+    if currentSystem == "Linux":
+        hasDisplay = bool(os.environ.get("DISPLAY") or os.environ.get("WAYLAND_DISPLAY"))
+        if not hasDisplay:
+            print("No GUI display session detected. Please run from a desktop session.")
+            return False
+
     return True
 
 # Initial Logo Splash Screen
@@ -927,8 +940,20 @@ class FormFactoryApp(tk.Tk):
         if not os.path.isfile(SETTINGS_CFG):
             messagebox.showerror("Settings Error", "settings.cfg was not found.")
             return
-        else:
-            os.startfile(SETTINGS_CFG)
+        
+        try:
+            systemName = platform.system()
+            if systemName == "Windows":
+                os.startfile(SETTINGS_CFG)
+            elif systemName == "Darwin":  # macOS
+                subprocess.run(["open", SETTINGS_CFG], check=False)
+            elif systemName == "Linux":   # Ubuntu and other Linux distros
+                subprocess.run(["xdg-open", SETTINGS_CFG], check=False)
+            else:
+                messagebox.showerror("Settings Error", f"Unsupported OS: {systemName}")
+        except Exception as exc:
+            messagebox.showerror("Settings Error", f"Could not open settings file: {exc}")
+        
             ##TODO known error where this adds a newline to terminal
             
 ############################################################
