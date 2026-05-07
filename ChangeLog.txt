@@ -1,3 +1,13 @@
+V1.0.2
+- Added Shush's new templates:
+    - CelShader
+    - DamagedMetal
+    - DisplacedClay
+    - FrontFacingWire
+    - HammeredMetal
+    - InivisbleLight
+    - NightSky
+
 V1.0.1
 - Save/Load options added
 - MacOs and Linux basic support added

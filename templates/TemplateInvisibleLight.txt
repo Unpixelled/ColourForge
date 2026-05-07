@@ -1,0 +1,123 @@
+section Colour Description
+text Colour Name
+number Colour ID
+checkbox Transparent Colour (Editor Only)
+
+section Light Colour
+picker ColourPicker
+desc Select a light colour with the picker above.
+number Colour R value
+number Colour G value
+number Colour B value
+
+section Light Strength
+number Strength of the light
+desc Default Strength: 5.0 for Quadratic, 1.0 for Linear, 0.5 for Constant
+desc Smaller values = less bright
+
+section Light Falloff Type
+text Light falloff type
+desc Default falloff: Quadratic
+desc Can also be Constant or Linear
+desc You *must* type in the falloff type
+
+end of form
+
+code
+
+<<< Colour Definition >>>
+!ColourID!	!ColourID!	!ColourID!	!ColourID!	!ColourName!	!ColourName!	!ColourName!	!ColourName!	!Hex!	!checkbox!	Transparent Colors	!ColourCategory!	to_lego			Misc Materials
+
+<<< Colour Settings >>>
+<material name="TRANS-!ColourNameSetting!" displacement_method="bump" heterogeneous_volume="False" use_local_tuning="False" use_mis="True" use_transparent_shadow="True" volume_interpolation_method="linear" volume_sampling_method="multiple_importance">
+
+	<!-- NOTE:
+				To hide the light emitter in reflections of glossy materials
+				[the solid colors that come with Stud.io have a glossy component]
+				change use_mis="True" to use_mis="False.
+
+				However, with the change you will need to increase the strength
+				of the emission node and significantly increase the number of
+				samples used when rendering. I would start with 4096 samples.
+
+				That also means the render times are going to get extremely long.
+	-->
+
+	<shader>
+
+	<color name="RGB" type="color" value="!ColourRValue1! !ColourGValue1! !ColourBValue1!" />
+	<value name="Strength" type="float" value="!number!" />
+	<value name="Smooth" type="float" value="0.0" />
+
+		<light_falloff name="LightFalloff">
+			<input name="Strength" type="float" />
+			<input name="Smooth" type="float" />
+			<!-- NOTE: Output can be set to Constant | Linear | Quadratic -->
+			<output name="Quadratic" type="float" />
+		</light_falloff>
+
+		<light_path name="LightPath" >
+			<output name="Is Camera Ray" type="float" />
+			<output name="Is Shadow Ray" type="float" />
+			<output name="Is Glossy Ray" type="float" />
+			<output name="Is Reflection Ray" type="float" />
+		</light_path>
+
+	<emission name="Emission">
+	<input name="Color" type="color" />
+	<input name="Strength" type="float" />
+	</emission>
+
+	<transparent_bsdf name="Trans">
+		<input name="Color" type="color" value="1.0 1.0 1.0" />
+	</transparent_bsdf>
+
+	<mix_closure name="MixShader01">
+		<input name="Fac" type="float" />
+	</mix_closure>
+
+	<mix_closure name="MixShader02">
+		<input name="Fac" type="float" />
+	</mix_closure>
+
+	<mix_closure name="MixShader03">
+		<input name="Fac" type="float" />
+	</mix_closure>
+
+	<mix_closure name="MixShader04">
+		<input name="Fac" type="float" />
+	</mix_closure>
+
+		<!-- Set the brightness and harshness of the LightFalloff node -->
+	<connect from_node="Strength" from_socket="Value" to_node="LightFalloff" to_socket="Strength"/>
+	<connect from_node="Smooth" from_socket="Value" to_node="LightFalloff" to_socket="Smooth"/>
+
+		<!-- Set the color and the brightness of the Emission node -->
+	<connect from_node="RGB" from_socket="Color" to_node="Emission" to_socket="Color"/>
+	<connect from_node="LightFalloff" from_socket="!text!" to_node="Emission" to_socket="Strength"/>
+		
+		<!-- Make the surface material invisible to the camera -->
+	<connect from_node="LightPath" from_socket="is_camera_ray" to_node="MixShader01" to_socket="Fac"/>
+	<connect from_node="Emission" from_socket="Emission" to_node="MixShader01" to_socket="Shader1"/>
+	<connect from_node="Trans" from_socket="BSDF" to_node="MixShader01" to_socket="Shader2"/>
+
+		<!-- Make the surface material not cast shadows -->
+	<connect from_node="LightPath" from_socket="is_shadow_ray" to_node="MixShader02" to_socket="Fac"/>
+	<connect from_node="MixShader01" from_socket="Shader" to_node="MixShader02" to_socket="Shader1"/>
+	<connect from_node="Trans" from_socket="BSDF" to_node="MixShader02" to_socket="Shader2"/>
+
+		<!-- Make the surface material invisible in glossy surfaces -->
+	<connect from_node="LightPath" from_socket="is_glossy_ray" to_node="MixShader03" to_socket="Fac"/>
+	<connect from_node="MixShader02" from_socket="Shader" to_node="MixShader03" to_socket="Shader1"/>
+	<connect from_node="Trans" from_socket="BSDF" to_node="MixShader03" to_socket="Shader2"/>
+
+		<!-- Make the surface material invisible in reflections -->
+	<connect from_node="LightPath" from_socket="is_reflection_ray" to_node="MixShader04" to_socket="Fac"/>
+	<connect from_node="MixShader03" from_socket="Shader" to_node="MixShader04" to_socket="Shader1"/>
+	<connect from_node="Trans" from_socket="BSDF" to_node="MixShader04" to_socket="Shader2"/>
+
+	<connect from_node="MixShader04" from_socket="Shader" to_node="Output" to_socket="Surface"/>
+	<!-- Created by Shushudancer -->
+	</shader>
+</material>
+<!-- Template By Shushudancer -->

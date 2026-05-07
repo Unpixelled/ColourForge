@@ -1,0 +1,103 @@
+section Colour Description
+text Colour Name
+number Colour ID
+checkbox Transparent Colour (Editor Only)
+
+section Metal
+picker Metal ColourPicker
+desc Select a metal colour with the picker above.
+number Metal Colour R value
+number Metal Colour G value
+number Metal Colour B value
+
+section IndentSize
+number Size
+desc Determines the size of the indentation. The smaller the number, the larger each indentation.
+desc 40 is a good starting point.
+
+section IndentDepth
+number Depth
+desc Determines the depth of the indentation. Smooth is 0.0, larger values increase depth.
+desc 0.07 is a good starting point.
+
+section Shininess
+number Shininess
+desc Determines the shininess of the metal. Smaller values makes the metal shinier.
+desc 0.3 is a good starting point.
+
+end of form
+
+code
+
+<<< Colour Definition >>>
+!ColourID!	!ColourID!	!ColourID!	!ColourID!	!ColourName!	!ColourName!	!ColourName!	!ColourName!	!Hex!	!checkbox!	Solid Colors	!ColourCategory!	to_lego			Misc Materials
+
+<<< Colour Settings >>>
+<material name="SOLID-!ColourNameSetting!" displacement_method="bump" heterogeneous_volume="False" use_local_tuning="False" use_mis="True" use_transparent_shadow="True" volume_interpolation_method="linear" volume_sampling_method="multiple_importance">
+	<shader>
+		<noise_texture name="NoiseTexture"
+			tex_mapping.rotation="0.0 0.0 0.0" tex_mapping.scale="1.0 1.0 1.0" tex_mapping.translation="0.0 0.0 0.0"
+			tex_mapping.type="point"
+			tex_mapping.x_mapping="x" tex_mapping.y_mapping="y" tex_mapping.z_mapping="z" >
+			<input name="Vector" type="vector" value="0.0 0.0 0.0" />
+			<input name="Scale" type="float" value="5.0000" />
+			<input name="Detail" type="float" value="10.0000" />
+			<input name="Roughness" type="float" value="1.0000" />
+			<input name="Distortion" type="float" value="0.0000" />
+			<output name="Color" type="color" />
+			<output name="Fac" type="float" />
+		</noise_texture>
+
+		<color name="MetalColor" value="!ColourRValue1! !ColourGValue1! !ColourBValue1!">
+			<output name="Color" type="color" />
+		</color>
+
+		<!-- Scale is size of the indentation. The smaller the number, the larger each indentation -->
+		<voronoi_texture name="VoronoiTexture" coloring="intensity" >
+			<input name="Vector" type="vector" value="1.0 1.0 1.0" />
+			<input name="Scale" type="float" value="!number!" />
+			<output name="Color" type="color" />
+			<output name="Fac" type="float" />
+		</voronoi_texture>
+
+		<mix name="MixColor" type="mix" use_clamp="False" >
+			<input name="Fac" type="float" value="0.4000" />
+			<input name="Color1" type="color" value="1.0 1.0 1.0" />
+			<input name="Color2" type="color" value="1.0 1.0 1.0" />
+			<output name="Color" type="color" />
+		</mix>
+
+		<!-- Strength is the depth of the indentation. The small the number, the shallower the depth -->
+		<bump name="Bump" enable="True" invert="False" >
+			<input name="Strength" type="float" value="!number!" />
+			<input name="Distance" type="float" value="0.7000" />
+			<input name="Height" type="float" value="0.0" />
+			<input name="Normal" type="vector" value="0.0 0.0 0.0" />
+			<output name="Normal" type="vector" />
+		</bump>
+
+		<glossy_bsdf name="GlossyBSDF" distribution="ggx" >
+			<input name="Color" type="color" />
+			<!-- Changes the shininess of the metal.  Lower value makes metal shinier -->
+			<input name="Roughness" type="float" value="!number!" />
+			<input name="Normal" type="vector" />
+			<output name="BSDF" />
+		</glossy_bsdf>
+
+		<group group_name="STICKER-GROUP" name="Group">
+			<input name="Shader" type="closure" />
+			<output name="Shader" type="closure" />
+		</group>
+
+		<connect from_node="VoronoiTexture" from_socket="Color" to_node="MixColor" to_socket="Color1"/>
+		<connect from_node="NoiseTexture" from_socket="Color" to_node="MixColor" to_socket="Color2"/>
+		<connect from_node="MixColor" from_socket="Color" to_node="Bump" to_socket="Height"/>
+		<connect from_node="MetalColor" from_socket="Color" to_node="GlossyBSDF" to_socket="Color"/>
+		<connect from_node="Bump" from_socket="Normal" to_node="GlossyBSDF" to_socket="Normal"/>
+
+		<connect from_node="GlossyBSDF" from_socket="BSDF" to_node="Group" to_socket="Shader"/>
+		<connect from_node="Group" from_socket="Shader" to_node="Output" to_socket="Surface" />
+	<!-- Created by Shushudancer -->
+	</shader>
+</material>
+<!-- Template By Shushudancer -->
