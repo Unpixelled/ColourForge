@@ -1,7 +1,7 @@
 # Unpixelled's ColourForge
 A Custom Colour Maker for Bricklink's Stud.io
 
-V1.0.0
+V1.0.1
 
 ## Features
 
@@ -37,7 +37,6 @@ pyinstaller --onefile --noconsole App.py
 This is still being tested as it massively inflates the file size.
 
 ## Improvements and planned features:
-- Linux and MacOS support
 - Gradient field support and control in templates
 - Custom group export/inclusion
 - Language support (potential collaboration needed)
@@ -45,4 +44,3 @@ This is still being tested as it massively inflates the file size.
 - Improve accuracy of estimated colour category
 - Render a brick if possible as changes are made (the dream)
 - Texture support
-- Save/Load input field values to work on them/fine tune them later

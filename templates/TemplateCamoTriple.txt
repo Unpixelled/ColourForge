@@ -62,15 +62,19 @@ code
 			<input name="Tangent" type="vector" value="0.0 0.0 0.0"/> 
 			<output name="BSDF" type="closure"/>
 		</principled_bsdf>
+		
 		<color name="BaseColour" value="!ColourRValue1! !ColourGValue1! !ColourBValue1!" >
 			<output name="Color" type="color"/>
 		</color>
+
 		<color name="LayerOneColour" value="!ColourRValue2! !ColourGValue2! !ColourBValue2!" >
 			<output name="Color" type="color"/>
 		</color>
+
 		<color name="LayerTwoColour" value="!ColourRValue3! !ColourGValue3! !ColourBValue3!" >
 			<output name="Color" type="color"/>
 		</color>
+
 		<musgrave_texture name="MusgraveBaseToOne" type="fbm" >
 			<input name="Vector" type="vector" value="0.0 0.0 0.0"/> 
 			<input name="Scale" type="float" value="8.4" /> 
@@ -82,6 +86,7 @@ code
 			<output name="Color" type="color"/>
 			<output name="Fac" type="float"/>
 		</musgrave_texture>
+
 		<musgrave_texture name="MusgraveOneToTwo" type="fbm" >
 			<input name="Vector" type="vector" value="0.0 0.0 0.0"/> 
 			<input name="Scale" type="float" value="12.0" /> 
@@ -93,19 +98,26 @@ code
 			<output name="Color" type="color"/>
 			<output name="Fac" type="float"/>
 		</musgrave_texture>
+
 		<mix name="MixColourBaseToOne" type="overlay" use_clamp="False" >
 			<input name="Fac" type="float"/>
 			<input name="Color1" type="color"/>
 			<input name="Color2" type="color"/>
 			<output name="Color" type="color"/>
 		</mix>
+
 		<mix name="MixColourOneToTwo" type="overlay" use_clamp="False" >
 			<input name="Fac" type="float"/>
 			<input name="Color1" type="color"/>
 			<input name="Color2" type="color"/>
 			<output name="Color" type="color"/>
 		</mix>
-		<connect from_node="Principled BSDF" from_socket="BSDF" to_node="Output" to_socket="Surface" />
+
+		<group group_name="STICKER-GROUP" name="Group">
+			<input name="Shader" type="closure" />
+			<output name="Shader" type="closure" />
+		</group>
+
 		<connect from_node="BaseColour" from_socket="Color" to_node="MixColourBaseToOne" to_socket="Color1" />
 		<connect from_node="LayerOneColour" from_socket="Color" to_node="MixColourBaseToOne" to_socket="Color2" />
 		<connect from_node="MusgraveBaseToOne" from_socket="Color" to_node="MixColourBaseToOne" to_socket="Fac" />
@@ -113,6 +125,8 @@ code
 		<connect from_node="MixColourOneToTwo" from_socket="Color" to_node="Principled BSDF" to_socket="BaseColor" />
 		<connect from_node="MusgraveOneToTwo" from_socket="Color" to_node="MixColourOneToTwo" to_socket="Fac" />
 		<connect from_node="LayerTwoColour" from_socket="Color" to_node="MixColourOneToTwo" to_socket="Color2" />
+		<connect from_node="Principled BSDF" from_socket="BSDF" to_node="Group" to_socket="Shader" />
+		<connect from_node="Group" from_socket="Shader" to_node="Output" to_socket="Surface" />
 	</shader>
 </material>
 <!-- Template By shushudancer -->
