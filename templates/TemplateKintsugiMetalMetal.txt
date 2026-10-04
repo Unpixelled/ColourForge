@@ -25,6 +25,7 @@ code
 !ColourID!	!ColourID!	!ColourID!	!ColourID!	!ColourName!	!ColourName!	!ColourName!	!ColourName!	!Hex!	!checkbox!	Solid Colors	!ColourCategory!	to_lego			Kintsugi Materials
 
 <<< Colour Settings >>>
+<!-- ColourID: !ColourID!	ColourName: !ColourName! -->
 <material displacement_method="bump" heterogeneous_volume="False" name="SOLID-!ColourNameSetting!" use_local_tuning="False" use_mis="True" use_transparent_shadow="True" volume_interpolation_method="linear" volume_sampling_method="multiple_importance">
 	<shader>
 		<texture_coordinate name="TextureCoordinate" from_dupli="False" >

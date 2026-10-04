@@ -27,6 +27,7 @@ end of form
 code
 
 <<< Colour Definition >>>
+<!-- ColourID: !ColourID!	ColourName: !ColourName! -->
 !ColourID!	!ColourID!	!ColourID!	!ColourID!	!ColourName!	!ColourName!	!ColourName!	!ColourName!	!Hex!	!checkbox!	Solid Colors	!ColourCategory!	to_lego			Misc Materials
 
 <<< Colour Settings >>>

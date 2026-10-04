@@ -552,7 +552,6 @@ class FormFactoryApp(tk.Tk):
         colourname = None
         colourid = None
         lightType = None
-        rgbFields = {}
 
         if not self.validateFields():
             return None
@@ -591,35 +590,6 @@ class FormFactoryApp(tk.Tk):
                     b = int(hex_val[5:7], 16)
                     pickers.append({"r": r, "g": g, "b": b, "_order": len(pickers)})
 
-            # For legacy rvalue/gvalue/bvalue fields from JS version - validate integers
-            if key.endswith("rvalue"):
-                try:
-                    r_val = int(val)
-                    if not (0 <= r_val <= 255):
-                        raise ValueError("RGB value out of range")
-                    rgbFields.setdefault(key[:-6], {})["r"] = r_val
-                except Exception:
-                    messagebox.showerror("Input Error", f"Invalid R value in field '{label}'. Please enter an integer between 0 and 255.")
-                    return None
-            elif key.endswith("gvalue"):
-                try:
-                    g_val = int(val)
-                    if not (0 <= g_val <= 255):
-                        raise ValueError("RGB value out of range")
-                    rgbFields.setdefault(key[:-6], {})["g"] = g_val
-                except Exception:
-                    messagebox.showerror("Input Error", f"Invalid G value in field '{label}'. Please enter an integer between 0 and 255.")
-                    return None
-            elif key.endswith("bvalue"):
-                try:
-                    b_val = int(val)
-                    if not (0 <= b_val <= 255):
-                        raise ValueError("RGB value out of range")
-                    rgbFields.setdefault(key[:-6], {})["b"] = b_val
-                except Exception:
-                    messagebox.showerror("Input Error", f"Invalid B value in field '{label}'. Please enter an integer between 0 and 255.")
-                    return None
-
         # Sort pickers by their order of appearance (just in case)
         pickers.sort(key=lambda x: x.get("_order", 0))
         for p in pickers:
@@ -643,38 +613,20 @@ class FormFactoryApp(tk.Tk):
         if pickers:
             for i, rgb in enumerate(pickers):
                 if i == 0:
-                    out = out.replace("!ColourRValue!", str(rgb["r"] / 255), 1)
-                    out = out.replace("!ColourGValue!", str(rgb["g"] / 255), 1)
-                    out = out.replace("!ColourBValue!", str(rgb["b"] / 255), 1)
-                    out = out.replace("!Hex!", rgbToHex(**rgb), 1)
-                    out = out.replace("!ColourCategory!", str(closestColour(rgb)), 1)
+                    out = out.replace("!ColourRValue!", str(rgb["r"] / 255))
+                    out = out.replace("!ColourGValue!", str(rgb["g"] / 255))
+                    out = out.replace("!ColourBValue!", str(rgb["b"] / 255))
+                    out = out.replace("!Hex!", rgbToHex(**rgb))
+                    out = out.replace("!ColourCategory!", str(closestColour(rgb)))
 
                 idx = i + 1
-                out = out.replace(f"!ColourRValue{idx}!", str(rgb["r"] / 255), 1)
-                out = out.replace(f"!ColourGValue{idx}!", str(rgb["g"] / 255), 1)
-                out = out.replace(f"!ColourBValue{idx}!", str(rgb["b"] / 255), 1)
+                out = out.replace(f"!ColourRValue{idx}!", str(rgb["r"] / 255))
+                out = out.replace(f"!ColourGValue{idx}!", str(rgb["g"] / 255))
+                out = out.replace(f"!ColourBValue{idx}!", str(rgb["b"] / 255))
 
             # Remove any indexed !HexN! and !ColourCategoryN! placeholders if present
             out = re.sub(r"!Hex\d+!", "", out)
             out = re.sub(r"!ColourCategory\d+!", "", out)
-
-        elif rgbFields:
-            # Fallback: legacy behaviour for rvalue/gvalue/bvalue fields from JS version
-            for idx, (prefix, rgb) in enumerate(rgbFields.items()):
-                if all(k in rgb for k in ("r", "g", "b")):
-                    if idx == 0:
-                        out = out.replace("!ColourRValue!", str(rgb["r"] / 255), 1)
-                        out = out.replace("!ColourGValue!", str(rgb["g"] / 255), 1)
-                        out = out.replace("!ColourBValue!", str(rgb["b"] / 255), 1)
-                        out = out.replace("!Hex!", rgbToHex(**rgb), 1)
-                        out = out.replace("!ColourCategory!", str(closestColour(rgb)), 1)
-
-                    idx1 = idx + 1
-                    out = out.replace(f"!ColourRValue{idx1}!", str(rgb["r"] / 255), 1)
-                    out = out.replace(f"!ColourGValue{idx1}!", str(rgb["g"] / 255), 1)
-                    out = out.replace(f"!ColourBValue{idx1}!", str(rgb["b"] / 255), 1)
-                    out = out.replace(f"!Hex{idx1}!", rgbToHex(**rgb), 1)
-                    out = out.replace(f"!ColourCategory{idx1}!", str(closestColour(rgb)), 1)
 
         # Replace colourname, colourid, and lightType
         if colourname is not None:

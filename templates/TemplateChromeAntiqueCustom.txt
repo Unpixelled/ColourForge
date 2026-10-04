@@ -1,0 +1,63 @@
+section Colour Description
+text Colour Name
+number Colour ID
+checkbox Transparent Colour (Editor Only)
+
+section Colour
+picker ColourPicker
+desc Select a colour with the picker above.
+number Colour R value
+number Colour G value
+number Colour B value
+
+section Second
+picker Second ColourPicker
+desc Select the second colour with the picker above.
+number Second Colour R value
+number Second Colour G value
+number Second Colour B value
+
+section Third
+picker Third ColourPicker
+desc Select the third colour with the picker above.
+number Third Colour R value
+number Third Colour G value
+number Third Colour B value
+
+section Fourth
+picker Fourth ColourPicker
+desc Select the fourth colour with the picker above.
+number Fourth Colour R value
+number Fourth Colour G value
+number Fourth Colour B value
+
+end of form
+
+code
+
+<<< Colour Definition >>>
+!ColourID!	!ColourID!	!ColourID!	!ColourID!	Antique !ColourName!	Antique !ColourName!	Antique !ColourName!	Antique !ColourName!	!Hex!	!checkbox!	Chrome Colors	!ColourCategory!	to_lego			Chrome Colors
+
+<<< Colour Settings >>>
+<!-- ColourID: !ColourID!	ColourName: !ColourName! -->
+<material displacement_method="bump" heterogeneous_volume="False" name="CHROME-ANTIQUE_!ColourNameSetting!" use_local_tuning="False" use_mis="True" use_transparent_shadow="True" volume_interpolation_method="linear" volume_sampling_method="multiple_importance">
+	<shader>
+		<color name="RGB1" value="!ColourRValue1! !ColourGValue1! !ColourBValue1!" />
+		<color name="RGB2" value="!ColourRValue2! !ColourGValue2! !ColourBValue2!" />
+		<color name="RGB3" value="!ColourRValue3! !ColourGValue3! !ColourBValue3!" />
+		<color name="RGB4" value="!ColourRValue4! !ColourGValue4! !ColourBValue4!" />
+		<group group_name="CHROME-ANTIQUE-MOD-GROUP" name="CHROME-ANTIQUE-MOD-GROUP">
+			<input name="BaseColor1" type="color" />
+			<input name="BaseColor2" type="color" />
+			<input name="BaseColor3" type="color" />
+			<input name="BaseColor4" type="color" />
+			<output name="BSDF" type="closure" />
+		</group>
+		<connect from_node="RGB1" from_socket="Color" to_node="CHROME-ANTIQUE-MOD-GROUP" to_socket="BaseColor1" />
+		<connect from_node="RGB2" from_socket="Color" to_node="CHROME-ANTIQUE-MOD-GROUP" to_socket="BaseColor2" />
+		<connect from_node="RGB3" from_socket="Color" to_node="CHROME-ANTIQUE-MOD-GROUP" to_socket="BaseColor3" />
+		<connect from_node="RGB4" from_socket="Color" to_node="CHROME-ANTIQUE-MOD-GROUP" to_socket="BaseColor4" />
+		<connect from_node="CHROME-ANTIQUE-MOD-GROUP" from_socket="BSDF" to_node="Output" to_socket="Surface" />
+	</shader>
+</material>
+<!-- Template By Unpixelled -->

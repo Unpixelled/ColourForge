@@ -34,6 +34,7 @@ code
 !ColourID!	!ColourID!	!ColourID!	!ColourID!	Satin !ColourName!	Satin !ColourName!	Satin !ColourName!	Satin !ColourName!	!Hex!	!checkbox!	Satin Colors	!ColourCategory!	to_lego			Satin Colors
 
 <<< Colour Settings >>>
+<!-- ColourID: !ColourID!	ColourName: !ColourName! -->
 <material name="SATIN-!ColourNameSetting!" diffuse_ao_factor="1.0" displacement_method="bump"
 	glossy_ao_factor="0.0" heterogeneous_volume="False" subsurface_ao_factor="0.0"
 	subsurface_factor="1.100000023841858" transmission_ao_factor="0.0" use_local_tuning="True"

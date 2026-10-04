@@ -18,6 +18,7 @@ code
 !ColourID!	!ColourID!	!ColourID!	!ColourID!	Rubber !ColourName!	Rubber !ColourName!	Rubber !ColourName!	Rubber !ColourName!	!Hex!	!checkbox!	Rubber Colors	!ColourCategory!	to_lego			Rubber Colors
 
 <<< Colour Settings >>>
+<!-- ColourID: !ColourID!	ColourName: !ColourName! -->
 <material displacement_method="bump" heterogeneous_volume="False" name="RUBBER-!ColourNameSetting!" use_local_tuning="False" use_mis="True" use_transparent_shadow="True" volume_interpolation_method="linear" volume_sampling_method="multiple_importance">
 	<shader>
 		<color name="RGB" value="!ColourRValue! !ColourGValue! !ColourBValue!" />

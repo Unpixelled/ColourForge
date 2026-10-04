@@ -27,6 +27,7 @@ code
 !ColourID!	!ColourID!	!ColourID!	!ColourID!	Milky !ColourName!	Milky !ColourName!	Milky !ColourName!	Milky !ColourName!	!Hex!	0.9803922	Milky Colors	!ColourCategory!	to_lego			Glow in Dark(Render Only)
 
 <<< Colour Settings >>>
+<!-- ColourID: !ColourID!	ColourName: !ColourName! -->
 	<material name="MILKY-!ColourNameSetting!" diffuse_ao_factor="1.0" displacement_method="bump" glossy_ao_factor="0.0" heterogeneous_volume="False" subsurface_ao_factor="0.0" subsurface_factor="1.100000023841858" transmission_ao_factor="0.0" use_local_tuning="True" use_mis="True" use_transparent_shadow="True" volume_interpolation_method="linear" volume_sampling_method="multiple_importance">
 	    <shader>
 	      <group group_name="DirtOnScratchMixGroup" name="DirtOnScratchMixGroup">

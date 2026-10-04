@@ -1,3 +1,12 @@
+V1.0.3
+- Added Chrome Antique Custom
+- Added code so that repeated instances of the same field all have the same value
+- Removed some legacy Code :)
+- Updated change log
+
+Super important:
+- Added comment at the start of each template, this will eventually be used for colour lookup for editing
+
 V1.0.2
 - Added Shush's new templates:
     - CelShader
