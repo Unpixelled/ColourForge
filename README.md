@@ -1,7 +1,7 @@
 # Unpixelled's ColourForge
 A Custom Colour Maker for Bricklink's Stud.io
 
-V1.0.2
+V1.0.3
 
 ## Features
 
@@ -9,6 +9,7 @@ V1.0.2
 - Clipboad copy, text file export and direct export to Stud.io
 - Backup system for Custom Colours
 - Simple settings system (there's only one so far!)
+- Save and load works in progress!
 
 ## Requirements
 
